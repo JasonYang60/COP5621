@@ -11,6 +11,6 @@ Run test cases.
 ```
 # Workload Description
 ```shell
-Jason finished the parser.y  
-Lin finished the scanner.l and two test examples
+**Jason** finished the parser.y  
+**Lin** finished the scanner.l and two test examples
 ```
