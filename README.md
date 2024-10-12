@@ -9,3 +9,6 @@ Run test cases.
 ./a.out < test0.txt
 ./a.out < test1.txt
 ```
+# workload description
+Jason finished the parser.y
+Lin finished the scanner.y and two test examples
