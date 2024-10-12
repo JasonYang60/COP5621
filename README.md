@@ -10,7 +10,7 @@ Run test cases.
 ./a.out < test1.txt
 ```
 # Workload Description
-```shell
-**Jason** finished the parser.y  
-**Lin** finished the scanner.l and two test examples
-```
+
+- Jason finished the parser.y  
+- Lin finished the scanner.l and two test examples
+
