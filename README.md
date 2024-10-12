@@ -10,5 +10,5 @@ Run test cases.
 ./a.out < test1.txt
 ```
 # workload description
-Jason finished the parser.y
-Lin finished the scanner.y and two test examples
+Jason finished the parser.y  
+Lin finished the scanner.l and two test examples
