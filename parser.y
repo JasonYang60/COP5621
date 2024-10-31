@@ -24,8 +24,7 @@
 %token IF
 %token LET
 %type expr
-%type term
-%type fla
+
 %type exprType
 %type var fun
 
@@ -35,8 +34,8 @@
 %type multiplyTerm
 %type divTerm
 %type modTerm
-%type oneTermOrMore
-%type oneFlaOrMore
+%type oneExprOrMore
+
 %type exprlist
 %%
 
@@ -46,43 +45,38 @@ inputlist   :/* empty */
             | LEFT var exprType RIGHT inputlist
 exprType: INT
         | BOOL
-expr    : term
-        | fla
-term    : CONST
+expr    : CONST
         | var
         | LEFT GETINT RIGHT
+        | TRUE
+        | FALSE
+        | LEFT GETBOOL RIGHT
         | addTerm
         | multiplyTerm
         | minusTerm
         | divTerm
         | modTerm
-        | LEFT IF fla term term RIGHT
+        | LEFT IF expr expr expr RIGHT
         | LEFT fun exprlist RIGHT
-        | LEFT LET LEFT var expr RIGHT term RIGHT 
-oneTermOrMore   : term
-                | term oneTermOrMore
-addTerm : LEFT ADD term oneTermOrMore RIGHT
-multiplyTerm    : LEFT MUL term oneTermOrMore RIGHT
-minusTerm   : LEFT MINUS term term RIGHT
-divTerm : LEFT DIV term term RIGHT
-modTerm : LEFT MOD term term RIGHT
-fla     : TRUE
-        | FALSE
-        | var
-        | LEFT GETBOOL RIGHT
-        | LEFT EQUAL term term RIGHT
-        | LEFT SMALLER term term RIGHT
-        | LEFT GREATER term term RIGHT
-        | LEFT NOTGREATER term term RIGHT
-        | LEFT NOTSMALLER term term RIGHT
-        | LEFT NOT fla RIGHT
-        | LEFT AND fla oneFlaOrMore RIGHT
-        | LEFT OR fla oneFlaOrMore RIGHT
-        | LEFT IF fla fla fla RIGHT
-        | LEFT fun exprlist RIGHT
-        | LEFT LET LEFT var expr RIGHT fla RIGHT
-oneFlaOrMore    : fla
-                | fla oneFlaOrMore
+        | LEFT LET LEFT var expr RIGHT expr RIGHT 
+        | LEFT EQUAL expr expr RIGHT
+        | LEFT SMALLER expr expr RIGHT
+        | LEFT GREATER expr expr RIGHT
+        | LEFT NOTGREATER expr expr RIGHT
+        | LEFT NOTSMALLER expr expr RIGHT
+        | LEFT NOT expr RIGHT
+        | LEFT AND expr oneExprOrMore RIGHT
+        | LEFT OR expr oneExprOrMore RIGHT
+
+       
+oneExprOrMore   : expr
+                | expr oneExprOrMore
+addTerm : LEFT ADD expr oneExprOrMore RIGHT
+multiplyTerm    : LEFT MUL expr oneExprOrMore RIGHT
+minusTerm   : LEFT MINUS expr expr RIGHT
+divTerm : LEFT DIV expr expr RIGHT
+modTerm : LEFT MOD expr expr RIGHT
+
 exprlist    : /* empty */
             | exprlist expr
 fun : VARNAME
