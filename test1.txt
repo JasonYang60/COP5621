@@ -1,20 +1,2 @@
-(define-fun fun1 (a int) (b bool) 
-    int
-    (and    true
-            false
-            b
-            (get-bool)
-            (= 1 2)
-            (< 1 2)
-            (<= 1 2)
-            (> 1 2)
-            (>= 1 2)
-            (not true)
-            (and b1 b2 b3)
-            (or b1 b2 b3)
-            (if b1 b2 b3)
-            (fun2)
-            (let (a 3) true)
-    )
-)
-(print a)
+(define-fun func (v1 int) int (if (> v3 0) (+ 1 2 3) 20))
+(print (func (get-int)))
