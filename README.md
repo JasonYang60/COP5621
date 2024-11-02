@@ -1,13 +1,13 @@
 # Step 1
-Compile parser.y and scanner.l.
+
 ``` shell
-yacc -d parser.y && flex scanner.l && gcc lex.yy.c y.tab.c -ll    
+make   
 ```
 # Step 2 
 Run test cases.
 ```shell
-./a.out < test0.txt
-./a.out < test1.txt
+./comp < test0.txt
+./comp < test1.txt
 ```
 # Workload Description
 
