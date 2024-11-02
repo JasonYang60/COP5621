@@ -1,7 +1,7 @@
 # Step 1
 
 ``` shell
-make   
+make comp
 ```
 # Step 2 
 Run test cases.
