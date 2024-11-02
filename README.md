@@ -8,7 +8,7 @@ Correct Samples.
 ```shell
 ./comp < test1.txt
 ./comp < test2.txt
-./comp < test2.txt
+./comp < test3.txt
 ```
 Incorrect Sample
 ```shell
