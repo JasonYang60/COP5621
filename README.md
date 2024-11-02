@@ -4,10 +4,15 @@
 make comp
 ```
 # Step 2 
-Run test cases.
+Correct Samples.
 ```shell
-./comp < test0.txt
 ./comp < test1.txt
+./comp < test2.txt
+./comp < test2.txt
+```
+Incorrect Sample
+```shell
+./comp < test4.txt
 ```
 
 
