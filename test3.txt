@@ -1,5 +1,3 @@
-(define-fun func (a int) (b bool)
-    int
-    (get-int)
+(print
+    (< (< a b) z)
 )
-(print (+ 1 2 3 4))
