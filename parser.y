@@ -43,22 +43,23 @@
 %type <ival>modTerm
 %type <ival>oneExprOrMore
 %type <ival>funname
+%type <ival>printmain
 
 %type <ival>exprlist
 %%
 
-program : LEFT DEFINEFUN funname inputlist retexprType expr RIGHT program  {  insert_child($3); insert_child($4); insert_child($5); insert_child($6); insert_node("define-fun", 0);}
-        | LEFT PRINT expr RIGHT {insert_child($3);insert_node("print", 1);}
-funname : fun {$$ = insert_node("func",1);}
+program : LEFT DEFINEFUN funname inputlist retexprType expr RIGHT program  { insert_child($3); insert_child($4); insert_child($5); insert_child($6); insert_node("DEF-FUN", 0);}
+        | LEFT PRINT expr RIGHT {insert_child($3);insert_node("PRINT", 1);}
+funname : fun {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
 inputlist: LEFT varint exprType RIGHT  {$$ = $2;} 
         | LEFT varint exprType RIGHT inputlist { $$ = $2; insert_child($5);} 
-varint : var {$$ = insert_node("var",2);}
+varint : var {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
 exprType: INT 
         | BOOL 
 retexprType: INT {$$ = insert_node("ret INT", 3); }
         | BOOL {$$ = insert_node("ret BOOL", 4);}
 expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node(str,1); }
-        | var {$$ = insert_node("var", 1);}
+        | var { char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
         | LEFT GETINT RIGHT{
                 $$ = insert_node("GETINT", 6);
                 }
@@ -71,8 +72,8 @@ expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d"
         | divTerm{$$ = $1; }
         | modTerm{$$ = $1; }
         | LEFT IF expr expr expr RIGHT{insert_child($3); insert_child($4);insert_child($5);$$ = insert_node("if", 10);}
-        | LEFT fun exprlist RIGHT{ insert_child($3); $$ = insert_node("fun", 11);}
-        | LEFT LET LEFT var expr RIGHT expr RIGHT {insert_child($7);$$ = insert_node("let", 12);}
+        | LEFT fun exprlist RIGHT{ insert_child($3); char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $2);  $$ = insert_node("name", 1);}
+        | LEFT LET LEFT varint expr RIGHT expr RIGHT {insert_child($4);insert_child($5);insert_child($7);$$ = insert_node("let", 12);}
         | LEFT EQUAL expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("equal", 13);}
         | LEFT SMALLER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("smaller", 14);}
         | LEFT GREATER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("greater", 15);}
