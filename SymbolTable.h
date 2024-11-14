@@ -46,6 +46,13 @@ struct LocalTable
 {
     struct SymbolTable* entry;
     struct LocalTable* last;
+    int cnt;
+};
+
+struct callTable
+{
+    struct SymbolTable* entry;
+    struct callTable* last;
 };
 
 void LocalTablePush();
@@ -53,6 +60,7 @@ void printLocal();
 static int localEmpty = 1;
 void popLocal();
 void checkLocal();
+void checkCall();
 // struct SymbolTable* createSymbolTableEntry(char* name);
 void destroySymbolTableEntry(struct SymbolTable* entry);
 
@@ -76,8 +84,10 @@ void push(char* name);
 
 static int tableList_scope = 0;
 static int arityCounter = 0;
-
 void incCounter();
+
+void incArgCounter();
+
 void addFunc();
 int checkSemanticError(struct FuncTable* f, struct SymbolTable* top);
 void printFunc();

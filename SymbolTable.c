@@ -57,12 +57,15 @@ void LocalTablePush() {
         localRoot = (struct LocalTable*)malloc(sizeof(struct LocalTable));
         localRoot->last = NULL;
         localRoot->entry = current;
+        localRoot->cnt = 0;
+
         currentLocal = localRoot;
     } else {
         struct LocalTable* temp = (struct LocalTable*)malloc(sizeof(struct LocalTable));
         temp->last = currentLocal;
         temp->entry = current;
-        
+        temp->cnt = 0;
+
         currentLocal = temp;
     }
 }
@@ -107,6 +110,63 @@ void checkLocal() {
         ptr = ptr->last;
         if(defined) { removeSymbol(ptr->next);}
     }
+    removeSymbol(currentLocal->entry);
+    popLocal();
+    
+}
+
+void checkCall() {
+    struct SymbolTable* top = current;
+    struct SymbolTable* btm = currentLocal->entry;
+
+    struct FuncTable* f = funcRoot;
+
+    // check if function has been declared.
+    int defined = 0;
+    while (f)
+    {
+        if(strcmp(f->entry->name, btm->name) == 0) {
+            defined = 1;
+            break;
+        }
+        f = f->next;
+    }
+    if(!defined) {
+        printf("function %s has not declared", btm->name);
+        perror("Variable name undeclared. \n");
+        exit(EXIT_FAILURE);
+    }
+
+    // check arg list.
+    struct SymbolTable* temp = btm->next;
+    int cnt = 0;
+    for(int i = 0; i < f->arities; i++){
+
+        if(temp) {
+            cnt++;
+            temp = temp->next;
+            removeSymbol(temp->last);
+        } else {
+            break;
+        }
+    }
+    if(currentLocal->cnt != f->arities){
+        printf("numbers of arguement doesn't match with function %s\n", f->entry->name);
+        perror("arguement list conflicts. \n");
+        exit(EXIT_FAILURE);
+    }
+    
+    // struct SymbolTable* ptr = top;
+    // while(ptr && ptr != btm){
+
+    //     int defined = 0;
+    //     if(strcmp(ptr->name, btm->name) == 0){
+    //         defined = 1;
+    //     }
+
+    //     ptr = ptr->last;
+    //     if(defined) { removeSymbol(ptr->next);}
+    // }
     removeSymbol(currentLocal->entry);
     popLocal();
     
@@ -168,6 +228,12 @@ void get_order(char* name) {
 
 void incCounter() {
     arityCounter++;
+}
+
+void incArgCounter() {
+    if(currentLocal) {
+        currentLocal->cnt++;
+    }
 }
 
 void addFunc() {
@@ -255,11 +321,11 @@ int checkSemanticError(struct FuncTable* f, struct SymbolTable* top) {
                     break;
                 }
             }
-            // if(!defined) {
-            //     printf("Variable %s is undefined\n", ptr->name);
-            //     perror("Variable name undefined.\n");
-            //     exit(EXIT_FAILURE);
-            // }
+            if(!defined) {
+                printf("Variable %s is undefined\n", ptr->name);
+                perror("Variable name undefined.\n");
+                exit(EXIT_FAILURE);
+            }
             ptr = ptr->last;
             if(defined) {
                 removeSymbol(ptr->next);

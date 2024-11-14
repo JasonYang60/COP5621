@@ -108,6 +108,9 @@ expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d"
         | LEFT funint exprlist RIGHT{ 
                 insert_children(2, $2, $3); 
                 $$ = insert_node("call func", 1);
+
+                printFunc();
+                checkCall();
                 }
         | LEFT LET LEFT localvarint expr RIGHT expr RIGHT {
                 insert_children(3, $4, $5, $7);
@@ -155,10 +158,18 @@ modTerm : LEFT MOD expr expr RIGHT{
         }
 
 exprlist    : empty {$$ = $1;}
-            | expr {$$ = $1;}
-            | expr exprlist {$$ = $1; insert_child($2);}
+            | expr {$$ = $1; get_order("exprlist"); incArgCounter(); }
+            | expr exprlist {
+                $$ = $1; insert_child($2);
+                get_order("exprlist");
+                incArgCounter();
+                }
       
-funint : fun {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); get_order(str); }
+funint : fun {char* str = (
+        char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); get_order(str); 
+        push(str);
+        LocalTablePush();
+        }
 deffunint : fun {
         char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); 
         
