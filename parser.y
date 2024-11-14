@@ -4,6 +4,7 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "ast.h"
+    #include "SymbolTable.h"
 %}
 
 %union {
@@ -34,6 +35,7 @@
 %type <ival>retexprType
 %type <ival> exprType
 %type <sval>var fun
+%type <ival>deffunint localvarint
 %type <ival>varint funint
 
 %type <ival>inputlist
@@ -51,24 +53,39 @@
 %type <ival>empty
 %%
 
-program : definefun program  {}
+program : definefun program  {get_order("start"); printStack(); printFunc(); printLocal(); }
         | entry mainexpr {insert_children(2, $1, $2); insert_node("entry", 1);}
 entry : LEFT {$$ = insert_node("main", 0);}
 mainexpr : PRINT expr RIGHT {
                 insert_child($2);
                 $$ = insert_node("call PRINT", 1);
         }
-definefun : LEFT DEFINEFUN funint inputlistentry retexprType expr RIGHT {
+definefun : LEFT DEFINEFUN deffunint inputlistentry retexprType expr RIGHT {
                 insert_children(4, $3, $4, $5, $6); 
                 $$ = insert_node("definefun", 0);
+
+                get_order("def fun");
+
+                //char* str = (char*)malloc(64 * sizeof(char)); strcpy(str, "unknown_name");
+                //struct SymbolTable* sym = createSymbolTableEntry(str);
+                //printSymbolTable(sym);
+                //printf("%d\n", get_current_scope());
+
+                addFunc();
                 }
 
-inputlistentry  : inputlist {insert_child($1); $$ = insert_node("inputlist", 0);}
+inputlistentry  : inputlist {insert_child($1); $$ = insert_node("inputlist", 0); }
 inputlist: empty {$$ = $1;}
-        | LEFT varint exprType RIGHT  {$$ = $2; } 
+        | LEFT varint exprType RIGHT  {
+                $$ = $2; 
+                get_order("inputlist");
+                incCounter();
+                } 
         | LEFT varint exprType RIGHT inputlist {
                 $$ = $2; 
                 insert_child($5);
+                get_order("inputlist");
+                incCounter();
                 } 
 exprType: INT {}
         | BOOL  {}
@@ -92,9 +109,12 @@ expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d"
                 insert_children(2, $2, $3); 
                 $$ = insert_node("call func", 1);
                 }
-        | LEFT LET LEFT varint expr RIGHT expr RIGHT {
+        | LEFT LET LEFT localvarint expr RIGHT expr RIGHT {
                 insert_children(3, $4, $5, $7);
                 $$ = insert_node("let", 12);
+
+                get_order("let");
+                checkLocal();
                 }
         | LEFT EQUAL expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("equal", 13);}
         | LEFT SMALLER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("smaller", 14);}
@@ -137,8 +157,28 @@ modTerm : LEFT MOD expr expr RIGHT{
 exprlist    : empty {$$ = $1;}
             | expr {$$ = $1;}
             | expr exprlist {$$ = $1; insert_child($2);}
-funint : fun {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
-varint : var {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
+      
+funint : fun {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); get_order(str); }
+deffunint : fun {
+        char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); 
+        
+        get_order(str);
+        push(str);
+        }
+varint : var {
+        char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);
+        
+        get_order(str); 
+        push(str);
+        
+        }
+localvarint : var {
+        char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);
+        
+        get_order(str); 
+        push(str);
+        LocalTablePush();
+        }
 empty : /* empty */ {$$ = insert_node("none", 1); }
 fun : VARNAME 
 var : VARNAME 
