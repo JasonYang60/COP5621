@@ -1,5 +1,9 @@
 #include "SymbolTable.h"
 
+struct FuncTable* funcRoot;
+struct FuncTable* currentFunc;
+struct SymbolTable* current;
+
 int get_current_scope() {
     return scope;
 }
@@ -79,6 +83,7 @@ void printLocal() {
         ptr = ptr->last;
     }
     printf("\n");
+
 }
 
 void popLocal() {
@@ -208,6 +213,9 @@ void changeName(char* name) {
     }
 }
 
+void setType(DataType type) {
+    current->type = type;
+}
 
 void printStack() {
 
@@ -215,7 +223,7 @@ void printStack() {
     printf("\n print stack info:\n");
     while (ptr)
     {
-        printf("name: %s, scope: %d\n", ptr->name, ptr->scope);
+        printf("name: %s, scope: %d, type: %d\n", ptr->name, ptr->scope, ptr->type);
         ptr = ptr->next;
     }
     printf("\n");
@@ -223,7 +231,7 @@ void printStack() {
 
 void get_order(char* name) {
     order++; 
-    printf("name: %s, order: %d\n", name, order);
+    // printf("name: %s, order: %d\n", name, order);
 }
 
 void incCounter() {
@@ -271,11 +279,63 @@ void addFunc() {
             ptr = ptr->last;
         } 
     }
-    checkSemanticError(currentFunc, current);
 }
 
-int checkSemanticError(struct FuncTable* f, struct SymbolTable* top) {
-    struct SymbolTable* ptr = top;
+void checkFunc() {
+    checkSemanticError(funcRoot);
+}
+
+void checkFuncName(struct FuncTable* f) {
+    struct SymbolTable* ptr = current;
+    struct SymbolTable* argtop = f->entry;
+    for(int i = 0; i < f->arities; i++) {
+        argtop = argtop->next;
+    }
+    while (ptr)
+    {
+        if(ptr == argtop) {
+            break;
+        } else {
+            struct FuncTable* s = funcRoot;
+            while (s)
+            {
+                if(s == f) {break;}
+                if(strcmp(ptr->name, s->entry->name) == 0) {
+                    printf("Variable %s has the name of a defined function %s\n", ptr->name, s->entry->name);
+                    perror("Variable name conflicts.\n");
+                    exit(EXIT_FAILURE);
+                }
+                s = s->next;
+            }
+            
+            
+            struct SymbolTable* itr = f->entry;
+            int defined = 0;
+            for(int i = 0; i < f->arities; i++) {
+                itr = itr->next;
+                if(strcmp(ptr->name, itr->name) == 0) {
+                    defined = 1;
+                    break;
+                }
+            }
+            if(!defined) {
+                printf("Variable %s is undefined\n", ptr->name);
+                perror("Variable name undefined.\n");
+                exit(EXIT_FAILURE);
+            }
+            ptr = ptr->last;
+            if(defined) {
+                removeSymbol(ptr->next);
+            }
+        }
+    }
+}
+
+void checkPrint() {
+    checkFuncName(currentFunc);
+}
+
+int checkSemanticError(struct FuncTable* f) {
     struct SymbolTable* argtop = f->entry;
     for(int i = 0; i < f->arities; i++) {
         argtop = argtop->next;
@@ -302,36 +362,9 @@ int checkSemanticError(struct FuncTable* f, struct SymbolTable* top) {
             exit(EXIT_FAILURE);
         }
     }
-    while (ptr)
-    {
-        if(ptr == argtop) {
-            break;
-        } else {
-            struct SymbolTable* itr = f->entry;
-            if(strcmp(ptr->name, itr->name) == 0) {
-                printf("Variable %s has the name of a defined function %s\n", ptr->name, itr->name);
-                perror("Variable name conflicts.\n");
-                exit(EXIT_FAILURE);
-            }
-            int defined = 0;
-            for(int i = 0; i < f->arities; i++) {
-                itr = itr->next;
-                if(strcmp(ptr->name, itr->name) == 0) {
-                    defined = 1;
-                    break;
-                }
-            }
-            if(!defined) {
-                printf("Variable %s is undefined\n", ptr->name);
-                perror("Variable name undefined.\n");
-                exit(EXIT_FAILURE);
-            }
-            ptr = ptr->last;
-            if(defined) {
-                removeSymbol(ptr->next);
-            }
-        }
-    }
+    checkFuncName(currentFunc);
+
+
 }
 
 void printFunc() {

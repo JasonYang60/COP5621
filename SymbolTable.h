@@ -1,3 +1,6 @@
+#ifndef SYMBOLTABLE_H
+#define SYMBOLTABLE_H
+
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h> 
@@ -70,10 +73,10 @@ void changeName(char* name);
 static const int tableListLimit = 128;
 
 static struct SymbolTable* root;
-static struct SymbolTable* current;
+extern struct SymbolTable* current;
 
-static struct FuncTable* funcRoot;
-static struct FuncTable* currentFunc;
+extern struct FuncTable* funcRoot;
+extern struct FuncTable* currentFunc;
 
 static struct LocalTable* localRoot;
 static struct LocalTable* currentLocal;
@@ -81,6 +84,7 @@ static struct LocalTable* currentLocal;
 
 void printStack();
 void push(char* name);
+void setType(DataType type);
 
 static int tableList_scope = 0;
 static int arityCounter = 0;
@@ -89,7 +93,12 @@ void incCounter();
 void incArgCounter();
 
 void addFunc();
-int checkSemanticError(struct FuncTable* f, struct SymbolTable* top);
+void checkFunc();
+void checkPrint();
+
+int checkSemanticError(struct FuncTable* f);
 void printFunc();
 
 void removeSymbol(struct SymbolTable* ptr);
+
+#endif // SYMBOLTABLE_H
