@@ -3,9 +3,9 @@
 ``` shell
 make
 ```
-The warning "3 reduce/reduce conflicts" comes from reduction of empty token.
 # Step 2 
-Correct Samples.
+Tests begin with number 1 will make the semantic checking, such as test10.txt.
+Tests from test10 to test14 are the incorrect programs, tests from test15 to test19 are the corresponding correct program versions.
 ```shell
 ./comp < test0.txt
 ./comp < test1.txt
