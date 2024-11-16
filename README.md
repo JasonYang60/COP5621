@@ -12,9 +12,10 @@ Tests from test10 to test14 are the incorrect programs.
 Tests from test15 to test19 are the corresponding correct program versions.
 
 ```shell
-./comp < test0.txt
-./comp < test1.txt
-./comp < test2.txt
+./comp < test10.txt  Function name undeclared. 
+./comp < test11.txt  Number of arguement doesn't match with function.
+./comp < test12.txt  Arguement type conflicts.
+./comp < test13.txt  Variable name undefined.
 ```
 Incorrect Sample.
 ```shell
