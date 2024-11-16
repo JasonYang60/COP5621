@@ -5,7 +5,12 @@ make
 ```
 # Step 2 
 Tests begin with number 1 will make the semantic checking, such as test10.txt.
-Tests from test10 to test14 are the incorrect programs, tests from test15 to test19 are the corresponding correct program versions.
+
+
+Tests from test10 to test14 are the incorrect programs.
+
+Tests from test15 to test19 are the corresponding correct program versions.
+
 ```shell
 ./comp < test0.txt
 ./comp < test1.txt
