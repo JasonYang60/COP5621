@@ -22,6 +22,25 @@ void fill_ast_node(struct ast** t, int val, char* token, bool is_leaf, int ntoke
   (*t)->token = token;
   (*t)->is_leaf = is_leaf;
   (*t)->ntoken = ntoken;
+  (*t)->type = UNKNOWNTYPE;
+  if (ast_child_root != NULL){                          //if child doesnot exist,
+    (*t)->child = ast_child_root;                     //set current child root pointer to child field
+    ast_child_root = NULL;                              //Set the child root to NULL as we intend to set a new list
+    insert_parent(*t);
+  } else {
+    (*t)->child = NULL;                               //
+  }
+}
+
+void fill_ast_node_type(struct ast** t, int val, char* token, bool is_leaf, int ntoken, DataType type){
+  (*t) = (struct ast*)malloc(sizeof(struct ast));
+  (*t)->id = val;                                     //set value into id field
+  (*t)->next = NULL;                                  //set next pointer to NULL
+  (*t)->token = token;
+  (*t)->is_leaf = is_leaf;
+  (*t)->ntoken = ntoken;
+  (*t)->type = type;
+
   if (ast_child_root != NULL){                          //if child doesnot exist,
     (*t)->child = ast_child_root;                     //set current child root pointer to child field
     ast_child_root = NULL;                              //Set the child root to NULL as we intend to set a new list
@@ -47,9 +66,31 @@ void insert_node_tmp(int val, char* token, bool is_leaf, int ntoken){
   }
 }
 
+void insert_node_tmp_type(int val, char* token, bool is_leaf, int ntoken, DataType type){
+  if (ast_list_root == NULL){                               //Create a new node and set the value if root is empty
+    fill_ast_node_type(&ast_list_root, val, token, is_leaf, ntoken, type);
+  } else {                                                  //Else create a ast graph node and assign it to next
+    struct ast* ptr;                                        //Create a temp pointer
+    fill_ast_node_type(&ptr, val, token, is_leaf, ntoken, type);
+
+    //Traverse root and set the new pointer at the next of last node
+    struct ast** tmp = &ast_list_root;
+    while ((*tmp)->next != NULL) {
+      tmp = &((*tmp)->next);    // last_node will store the pointer to last node
+    }
+    (*tmp)->next = ptr;
+  }
+}
+
 int insert_node(char* token, int ntoken) {
   current_node_id++;
   insert_node_tmp(current_node_id, token, ast_child_root == NULL, ntoken);
+  return current_node_id;
+}
+
+int insert_node_type(char* token, int ntoken, DataType type) {
+  current_node_id++;
+  insert_node_tmp_type(current_node_id, token, ast_child_root == NULL, ntoken, type);
   return current_node_id;
 }
 
@@ -133,6 +174,97 @@ int get_child_num(struct ast* ast_node){
   }
   return child_num;
 }
+int checkType(struct ast* node){
+    if(strcmp(node->token, "=") == 0 
+    || strcmp(node->token, ">") == 0 
+    || strcmp(node->token, "<") == 0 
+    || strcmp(node->token, ">=") == 0 
+    || strcmp(node->token, "<=") == 0 
+    ) {
+        if(node->child->id->type != node->child->next->id->type) {
+            perror("arg types of operator should be the same.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if(strcmp(node->token, "+") == 0) {
+        struct ast_child* tmp = node->child;
+        for(int i = 0; i < get_child_num(node); i++){
+            if(tmp->id->type != INTTYPE) {
+                perror("arg types of + should be INT.\n");
+                exit(EXIT_FAILURE);
+            }
+            if(tmp->next){
+                tmp = tmp->next;
+            }
+        }
+    } else if(strcmp(node->token, "-") == 0) {
+        if(node->child->id->type != INTTYPE
+        || node->child->next->id->type != INTTYPE) {
+            perror("arg types of - should be INT.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if(strcmp(node->token, "*") == 0) {
+        struct ast_child* tmp = node->child;
+        for(int i = 0; i < get_child_num(node); i++){
+            if(tmp->id->type != INTTYPE) {
+                perror("arg types of * should be INT.\n");
+                exit(EXIT_FAILURE);
+            }
+            if(tmp->next){
+                tmp = tmp->next;
+            }
+        }
+    } else if(strcmp(node->token, "div") == 0) {
+        if(node->child->id->type != INTTYPE
+        || node->child->next->id->type != INTTYPE) {
+            perror("arg types of div should be INT.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if(strcmp(node->token, "mod") == 0) {
+        if(node->child->id->type != INTTYPE
+        || node->child->next->id->type != INTTYPE) {
+            perror("arg types of mod should be INT.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if(strcmp(node->token, "not") == 0) {
+        if(node->child->id->type != BOOLTYPE) {
+            perror("arg types of not operator should be BOOL.\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if(strcmp(node->token, "and") == 0) {
+        struct ast_child* tmp = node->child;
+        for(int i = 0; i < get_child_num(node); i++){
+            if(tmp->id->type != BOOLTYPE) {
+                perror("arg types of and operator should be BOOL.\n");
+                exit(EXIT_FAILURE);
+            }
+            if(tmp->next){
+                tmp = tmp->next;
+            }
+        }
+    } else if(strcmp(node->token, "and") == 0) {
+        struct ast_child* tmp = node->child;
+        for(int i = 0; i < get_child_num(node); i++){
+            if(tmp->id->type != BOOLTYPE) {
+                perror("arg types of and operator should be BOOL.\n");
+                exit(EXIT_FAILURE);
+            }
+            if(tmp->next){
+                tmp = tmp->next;
+            }
+        }
+    } else if(strcmp(node->token, "if") == 0) {
+        if(node->child->id->type != BOOLTYPE) {
+            perror("the first arg types of if should be BOOL.\n");
+            exit(EXIT_FAILURE);
+        }
+        if(node->child->next->next->id->type != node->child->next->id->type) {
+            perror("types of the last two args of if should be the same.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return 0;
+}
+
 
 int visit_ast(int (*f)(struct ast* ast_node)){
   struct ast* temp_root = ast_list_root;
@@ -187,3 +319,161 @@ void free_ast() {
     free(current_root);
   }
 }
+int assignType(struct ast* node) {
+
+    set_type(node);
+    // printf(" %s, type:%d\n", node->token, node->type);
+
+    return 0;
+}
+
+void asttree(){
+    // printf("fun: %d\n",get_type(ast_list_root));
+    // printf("fun: %d\n",ast_list_root->next->next->next->next->type);
+    // printf("fun: %d\n",ast_list_root->parent->child->next->next->id->type);
+    // printf("fun: %d\n",get_type(ast_list_root->parent->child->next->next->next->id));
+    // printf("%s\n", funcRoot->entry->name);
+
+    visit_ast(assignType);
+    visit_ast(checkType);
+
+
+}
+
+
+DataType set_type(struct ast* node) {
+    if(node->type != UNKNOWNTYPE) { // type has defined;
+        return node->type;
+    }
+    // type has not defined;
+    DataType ty = UNKNOWNTYPE;
+
+    if(!node->parent) { // entry
+        node->type = set_type(node->child->next->id);
+        return node->type;
+    }
+
+
+    // case 1, node is a function
+    if(strcmp(node->token, "definefun") == 0) {
+        node->type = set_type(node->child->next->next->id);
+        return node->type;
+    } else if(strcmp(node->parent->token, "definefun") == 0 && node->parent->child->id == node) { // funcName
+        node->type = set_type(node->parent->child->next->next->id);
+        // update FuncTable
+        {
+            struct FuncTable* f = funcRoot;
+            while (f)
+            {
+                if(strcmp(f->entry->name, node->token) == 0) {
+                    f->entry->type = ty;
+                    break;
+                }
+                f = f->next;
+            }
+        }
+        return node->type;
+    } else if(strcmp(node->token, "inputlist") == 0) {
+        return UNKNOWNTYPE;
+    } else if(strcmp(node->token, "let") == 0) {
+        node->type = set_type(node->child->next->next->id);
+        return node->type;
+    } else if(strcmp(node->parent->token, "let") == 0 && node->parent->child->id == node) { // first child node of let
+        push(node->token);
+        node->type = set_type(node->parent->child->next->id); // second node
+        current->type = node->type;
+        return node->type; 
+    } else if(strcmp(node->token, "call func") == 0) {
+        node->type = set_type(node->child->id);
+        return node->type;
+    } else if(strcmp(node->token, "if") == 0) {
+        node->type = set_type(node->child->next->id);
+        return node->type; // secode child node
+    } else if(strcmp(node->parent->token, "let") == 0 && node->parent->child->next->next->id == node) { // third term
+        removeSymbol(current); // pop
+    }
+
+    // check func name
+    int isFunc = 0;
+    {  // isFunc ?
+        struct FuncTable* f = funcRoot;
+        while(f) {
+            if(strcmp(f->entry->name, node->token) == 0) {
+                isFunc = 1;
+                break;
+            }
+            f = f->next;
+        }
+        if(isFunc){
+            ty = f->entry->type;
+            return ty;
+        }
+    }
+
+    // check func params
+    int isVar = 0;
+    int inFunc = 0;
+    char* funcName = NULL;
+    { // inFunc ?
+        struct ast* nd = node;
+        while(nd) {
+            if(strcmp(nd->token, "definefun") == 0) {
+                inFunc = 1;
+                funcName = nd->child->id->token;
+                break;
+            }
+            nd = nd->parent;
+        }
+    }
+    if(inFunc) { // func variables
+    
+        struct FuncTable* f = funcRoot;
+        while(f) {
+            if(strcmp(f->entry->name, funcName) == 0) {
+                struct SymbolTable* tb = f->entry;
+                for(int i = 0; i < f->arities; i++){
+                    tb = tb->next;
+                    if(strcmp(tb->name, node->token) == 0){
+                        isVar = 1;
+                        node->type = tb->type;
+
+                        return node->type;
+                    }
+                }
+                break;
+            }
+            f = f->next;
+        }
+    }
+
+    // if (strcmp(node->parent->token, "let") == 0 && node->parent->child->next->id == node) { // second child node of let
+    //     struct SymbolTable* tp = current->last; // could not start from the top of stack
+    //     printStack();
+
+    //     while(tp) {
+    //         if(strcmp(tp->name, node->token) == 0) {
+    //             node->type = tp->type;
+    //             return node->type;
+    //         }
+    //         tp = tp->last;
+    //     }
+    // } 
+
+    {
+        struct SymbolTable* tp = current; // start from the top of stack
+        while(tp) {
+            if(strcmp(tp->name, node->token) == 0) {
+                node->type = tp->type;
+                break;
+            }
+            tp = tp->last;
+        }
+
+        return node->type;
+    };
+
+    return ty;
+}
+
+
+
