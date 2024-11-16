@@ -138,7 +138,7 @@ void checkCall() {
     }
     if(!defined) {
         printf("function %s has not declared", btm->name);
-        perror("Variable name undeclared. \n");
+        perror("Function name undeclared. \n");
         exit(EXIT_FAILURE);
     }
 
@@ -150,16 +150,55 @@ void checkCall() {
         if(temp) {
             cnt++;
             temp = temp->next;
+
             removeSymbol(temp->last);
         } else {
             break;
         }
     }
+
+    
     if(currentLocal->cnt != f->arities){
         printf("numbers of arguement doesn't match with function %s\n", f->entry->name);
         perror("arguement list conflicts. \n");
         exit(EXIT_FAILURE);
     }
+    else{
+        DataType inputarglist[f->arities];
+        DataType funarglist[f->arities];
+        struct SymbolTable *temp1 = btm->next;
+        for (int i = 0; i < f->arities;i++){
+            if(temp1) {
+                inputarglist[i] = temp1->type;
+                temp1 = temp1->next;
+            }else{
+                break;
+            }
+        }
+        struct SymbolTable* argtop = f->entry;
+        for(int i = 0; i < f->arities; i++) {
+            argtop = argtop->next;
+            funarglist[i] = argtop->type;
+
+        }
+    //      for (int i = 0; i < f->arities; i++) {
+    //     printf("%d ", inputarglist[i]); 
+    // }
+    //  printf("\n");
+    //          for (int i = 0; i < f->arities; i++) {
+    //     printf("%d ", funarglist[i]); 
+    // }
+    // printf("\n");
+    //     for (int i = 0; i < f->arities; i++) {
+    //         if(inputarglist[i] != (funarglist[i] - 1))
+    //         {        printf("argument type doesn't not match\n");
+    //     perror("arguement type conflicts. \n");} 
+    //     exit(EXIT_FAILURE);
+    // }
+
+    }
+
+
     
     // struct SymbolTable* ptr = top;
     // while(ptr && ptr != btm){
