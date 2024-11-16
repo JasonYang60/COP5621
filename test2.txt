@@ -1,9 +1,0 @@
-(define-fun func1 (a int) (b bool)
-    int
-    (get-int)
-)
-(define-fun func2 
-    bool
-    (get-bool)
-)
-(print (+ 1 (fun2)))
