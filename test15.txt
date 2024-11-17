@@ -1,2 +1,0 @@
-(define-fun f (v bool) bool v)
-(print (f true))
