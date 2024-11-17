@@ -1,1 +1,0 @@
-(print (let (v 3) (div v 2)))
