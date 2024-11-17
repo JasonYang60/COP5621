@@ -1,0 +1,2 @@
+(define-fun func (v1 int) (v2 int) (v3 int) int (+ v1 v2 v3))
+(print (func 1 2 3))

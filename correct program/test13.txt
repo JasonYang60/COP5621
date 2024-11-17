@@ -1,0 +1,3 @@
+(define-fun f1 bool true)
+(define-fun f2 bool false)
+(print 1)
