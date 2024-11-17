@@ -56,6 +56,7 @@ program : definefun program  {get_order("start");}
         | entry PRINT expr RIGHT {
                 insert_children(2, $1, $3); insert_node("entry", 1);
                 checkPrint();
+
         }
 entry : LEFT {$$ = insert_node("print", 0);
                 push("print");

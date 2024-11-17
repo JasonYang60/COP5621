@@ -3,37 +3,19 @@
 ``` shell
 make
 ```
+The warning "3 reduce/reduce conflicts" comes from reduction of empty token.
 # Step 2 
-Tests begin with number 1 will make the semantic checking, such as test10.txt.
-
-
-Tests from test10 to test13 are the incorrect programs.
-
-Tests from test14 to test15 are the correct programs.
-
+Correct Samples.
 ```shell
-./comp < test10.txt  Function name undeclared. 
-./comp < test11.txt  Number of arguement doesn't match with function.
-./comp < test12.txt  Variable name undefined.
-./comp < test13.txt  Arguement has the name of a defined function.
-./comp < test14.txt Correct
-./comp < test15.txt Correct
+./comp < test0.txt
+./comp < test1.txt
+./comp < test2.txt
 ```
-Tests begin with number 2 will make the semantic checking, such as test20.txt.
-
-
-Tests from test20 to test22 are the incorrect programs.
-
-Test test23 is the correct programs.
-
+Incorrect Sample.
 ```shell
-./comp < test20.txt  arg types of + should be INT.
-./comp < test21.txt  arg types of div should be INT.
-./comp < test22.txt  types of the last two args of if should be the same.
-./comp < test23.txt  Correct
+./comp < test3.txt
 ```
-
-
+Our code will report "syntax error" and skip the AST generation process.
 
 
 

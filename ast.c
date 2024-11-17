@@ -261,6 +261,60 @@ int checkType(struct ast* node){
             perror("types of the last two args of if should be the same.\n");
             exit(EXIT_FAILURE);
         }
+    } else if(strcmp(node->token,"call func") == 0){
+        struct ast_child* tmp = node->child;
+        char* funname = tmp->id->token;
+        struct FuncTable* funtmp = funcRoot;
+        int artnum = 0; 
+        DataType* funarglist = (DataType*) malloc(artnum * sizeof(DataType));
+        char** funargnamelist = (char**) malloc(artnum * sizeof(char*));
+
+        // get funarglist and funargnamelist
+        while(funtmp){
+          if(strcmp(funtmp->entry->name,funname) == 0){
+            artnum = funtmp->arities;
+            struct SymbolTable* localfuntmp = funtmp->entry->next;
+            for (int i = 0;i < artnum;i++){
+              funarglist[i] = localfuntmp->type;
+              funargnamelist[i] = localfuntmp->name;
+              localfuntmp = localfuntmp->next;
+            }
+          }
+          funtmp = funtmp->next;
+        }
+        DataType* inputarglist = (DataType*) malloc(artnum * sizeof(DataType));
+        for (int i = 0; i < artnum; i++){
+          tmp = tmp->next;
+          inputarglist[i] = tmp->id->type;
+        }
+
+        // printf("print inputarglist.\n");
+        // for (int i = 0; i < artnum; i++){
+        //   printf("%d",inputarglist[i]);
+        //   printf("\n");
+        // }
+
+        // printf("print funarglist.\n");
+        // for (int i = 0; i < artnum; i++){
+        //   printf("%d",funarglist[i]);
+        //   printf("\n");
+        // }
+
+        const char* dataTypeToString(DataType type) {
+        switch (type) {
+            case UNKNOWNTYPE: return "UNKNOWN";
+            case INTTYPE: return "INT";
+            case BOOLTYPE: return "BOOL";
+          }
+        }
+
+        for (int i = 0; i < artnum; i++){
+          if (inputarglist[i] != funarglist[i]){
+            printf("the argument #%d of %s does not type check with type of %s.\n",i+1,funargnamelist[i],dataTypeToString(funarglist[i]));
+            perror("Argument Type Mismatch.\n");
+            exit(EXIT_FAILURE);
+          }
+        }
     }
     return 0;
 }
@@ -335,6 +389,7 @@ void asttree(){
     // printf("%s\n", funcRoot->entry->name);
 
     visit_ast(assignType);
+
     visit_ast(checkType);
 
 
@@ -366,12 +421,13 @@ DataType set_type(struct ast* node) {
             while (f)
             {
                 if(strcmp(f->entry->name, node->token) == 0) {
-                    f->entry->type = ty;
+                    f->entry->type = node->type;
                     break;
                 }
                 f = f->next;
             }
         }
+
         return node->type;
     } else if(strcmp(node->token, "inputlist") == 0) {
         return UNKNOWNTYPE;
@@ -396,6 +452,9 @@ DataType set_type(struct ast* node) {
     // check func name
     int isFunc = 0;
     {  // isFunc ?
+        if(strcmp(node->token, "print") == 0) {
+          return UNKNOWNTYPE;
+        }
         struct FuncTable* f = funcRoot;
         while(f) {
             if(strcmp(f->entry->name, node->token) == 0) {
@@ -405,8 +464,17 @@ DataType set_type(struct ast* node) {
             f = f->next;
         }
         if(isFunc){
-            ty = f->entry->type;
-            return ty;
+       //   if(node->parent->child->next->next) {
+          // {
+          //   node->type = set_type(node->parent->child->next->next->id);
+          //   f->entry->type = node->type;
+          //   printStack();
+          //   printf("---name: %s, type: %d\n", node->token, ty);
+          //   return node->type;
+          // } 
+          // // else {
+          node->type = f->entry->type;
+          return node->type;
         }
     }
 
@@ -426,7 +494,6 @@ DataType set_type(struct ast* node) {
         }
     }
     if(inFunc) { // func variables
-    
         struct FuncTable* f = funcRoot;
         while(f) {
             if(strcmp(f->entry->name, funcName) == 0) {

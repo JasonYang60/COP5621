@@ -137,7 +137,7 @@ void checkCall() {
         f = f->next;
     }
     if(!defined) {
-        printf("function %s has not declared", btm->name);
+        printf("Function %s has not declared", btm->name);
         perror("Function name undeclared. \n");
         exit(EXIT_FAILURE);
     }
@@ -159,8 +159,8 @@ void checkCall() {
 
     
     if(currentLocal->cnt != f->arities){
-        printf("numbers of arguement doesn't match with function %s\n", f->entry->name);
-        perror("arguement list conflicts. \n");
+        printf("Numbers of arguement doesn't match with function %s\n", f->entry->name);
+        perror("Arguement list conflicts. \n");
         exit(EXIT_FAILURE);
     }
     else{
@@ -396,11 +396,28 @@ int checkSemanticError(struct FuncTable* f) {
             }
         }
         if(used) {
-            printf("duplicated declaration of arguement %s.\n", argtop->name);
-            perror("arguement name conflicts.\n");
+            printf("Duplicated declaration of arguement %s.\n", argtop->name);
+            perror("Arguement name conflicts.\n");
             exit(EXIT_FAILURE);
         }
     }
+
+    // check function name duplication
+    struct FuncTable* outer = funcRoot;
+    while(outer){
+        struct FuncTable* inner = outer->next;
+        while(inner){
+            if(strcmp(outer->entry->name,inner->entry->name) == 0){
+                printf("Duplicated declaration of fuction name: %s.\n", outer->entry->name);
+                perror("Function name conflicts.\n");
+                exit(EXIT_FAILURE);
+            }
+            inner = inner->next;
+        }
+        outer = outer->next;
+    }
+
+
     checkFuncName(currentFunc);
 
 
