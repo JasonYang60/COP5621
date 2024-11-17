@@ -3,13 +3,12 @@
 ``` shell
 make
 ```
-The warning "3 reduce/reduce conflicts" comes from reduction of empty token.
 # Step 2 
-Correct Samples.
+Incorrect Programs begin with number 0
 ```shell
-./comp < test0.txt
-./comp < test1.txt
-./comp < test2.txt
+./comp < test00.txt  show semantic error: undeclared function name.
+./comp < test01.txt  show semantic error: numbers of arguments doesn't match with the number of parameters in function
+./comp < test02.txt
 ```
 Incorrect Sample.
 ```shell
