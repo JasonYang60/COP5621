@@ -28,17 +28,7 @@ Correct Programs begin with number 1
 ./comp < test17.txt  The right version of test07.txt
 ./comp < test18.txt  The right version of test08.txt
 ./comp < test19.txt  Show the logic of our program in handling variable name conflicts.
-
-**Important**：When handling parameter name conflicts, In our program we follow the principles of C-like compilers, and will ensure that inner-scope variables with the same name take precedence over outer-scope variables within their scope.
-
-
-
-
-
-
-
 ```
-Our code 
-
+**Important**：When handling parameter name conflicts, In our program we follow the principles of C-like compilers, and will ensure that inner-scope variables with the same name take precedence over outer-scope variables within their scope.
 
 
