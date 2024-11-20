@@ -174,6 +174,16 @@ int get_child_num(struct ast* ast_node){
   }
   return child_num;
 }
+
+const char* dataTypeToString(DataType type) {
+switch (type) {
+    case UNKNOWNTYPE: return "UNKNOWN";
+    case INTTYPE: return "INT";
+    case BOOLTYPE: return "BOOL";
+  }
+}
+
+
 int checkType(struct ast* node){
     if(strcmp(node->token, "=") == 0 
     || strcmp(node->token, ">") == 0 
@@ -300,13 +310,6 @@ int checkType(struct ast* node){
         //   printf("\n");
         // }
 
-        const char* dataTypeToString(DataType type) {
-        switch (type) {
-            case UNKNOWNTYPE: return "UNKNOWN";
-            case INTTYPE: return "INT";
-            case BOOLTYPE: return "BOOL";
-          }
-        }
 
         for (int i = 0; i < artnum; i++){
           if (inputarglist[i] != funarglist[i]){
