@@ -111,7 +111,7 @@ expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d"
                 insert_children(2, $2, $3); 
                 $$ = insert_node("call func", 1);
 
-                printFunc();
+                //printFunc();
                 checkCall();
                 }
         | LEFT LET LEFT localvarint expr RIGHT expr RIGHT {

@@ -1289,7 +1289,7 @@ case 25:
                 insert_children(2, yystack.l_mark[-2].ival, yystack.l_mark[-1].ival); 
                 yyval.ival = insert_node("call func", 1);
 
-                printFunc();
+                /*printFunc();*/
                 checkCall();
                 }
 #line 1296 "y.tab.c"
