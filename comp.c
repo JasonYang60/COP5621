@@ -10,10 +10,14 @@ int main (int argc, char **argv) {
     //traverse_ast();
     struct ast_list* alist = find_all_root();
     //print_ast_list(alist);
-    for (int i = 2; i < 3; i++){
+    int* root_id = (int*)malloc(sizeof(int)); 
+    *root_id = 0;
+    int* dot_id = (int*)malloc(sizeof(int)); 
+    *dot_id = 0;
+    for (int i = 0; i < alist->length; i++){
 
       printf("Tree: \n");
-      create_CFG(alist->astList[i],i);
+      create_CFG(alist->astList[i],root_id,dot_id);
       printf("\n");
 
       // int size = 0;              

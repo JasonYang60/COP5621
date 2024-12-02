@@ -268,8 +268,6 @@ void print_ast_list(const struct ast_list* alist) {
 
 
 
-
-
 FILE *fp;
 int print(struct ast* temp_root) {
   if (!temp_root->is_leaf){

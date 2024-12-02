@@ -15,6 +15,7 @@ CFGNode* createNode(int id) {
     node->pred2 = NULL;
     node->succ1 = NULL;
     node->succ2 = NULL;
+    node->visited = NULL;
     
     node->CFGInfo = (char*)malloc(MAX_CAPACITY + 1);
     return node;
@@ -32,6 +33,10 @@ void freeNode(CFGNode* node) {
 void printCFG(CFGNode* CFGroot){
     CFGNode* tempCFGNode = CFGroot;
     while(tempCFGNode != NULL){
+        // if (tempCFGNode->succ1 == NULL){
+        //     tempCFGNode->pred1->succ1 = NULL;
+        //     break;
+        // }
         printf("%s\n",tempCFGNode->CFGInfo);
         tempCFGNode = tempCFGNode->succ1;
     }
@@ -88,6 +93,41 @@ const char* positionToString(Position pos) {
 }
 
 
+                
+void dot_printConnections(FILE *fp, CFGNode* node, CFGNode* next1, CFGNode* next2) {
+    if (next1) {
+        fprintf(fp,"%d->%d\n", node->id, next1->id);
+    }
+    if (next2) {
+        fprintf(fp,"%d->%d\n", node->id, next2->id);
+    }
+}
+
+void dot_dfs(FILE *fp,CFGNode* node) {
+    if (node == NULL || node->visited) {
+        return; 
+    }
+    node->visited = true;
+    if (node->succ1) {
+       dot_dfs(fp,node->succ1);
+    }
+    if (node->succ2) {
+        dot_dfs(fp,node->succ2);
+    }
+    fprintf(fp, "%d [label=\"%s\", fontname=\"monospace\"];\n ", node->id, node->CFGInfo);
+    dot_printConnections(fp,node, node->succ1, node->succ2);
+}
+
+
+void dot_CFG(CFGNode* CFG_root){
+    FILE *fp = fopen("cfg.dot", "a");
+    fprintf(fp, "digraph print {\n ");
+    CFGNode* tempCFGNode = CFG_root;
+    dot_dfs(fp,tempCFGNode);
+    fprintf(fp, "}\n ");
+    fclose(fp);
+}
+
 
 
 
@@ -110,8 +150,8 @@ void middle_traverse_ast(struct ast* temp_root, char** result, int* size){
 }
 
 
-void create_CFG(struct ast* temp_root, int root_id){
-    struct CFGNode* CFG_root = createNode(root_id);
+void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
+    struct CFGNode* CFG_root = createNode(*root_id);
     struct CFGNode* CFG_current = CFG_root;
     struct CFGNode* CFG_IF_FRONT[MAX_CAPACITY];
     int CFG_IF_FRONT_num = 0;
@@ -121,6 +161,10 @@ void create_CFG(struct ast* temp_root, int root_id){
     CFG_IF_BEHIND[CFG_IF_BEHIND_num] = NULL;
     struct CFGNode* CFG_left;
     struct CFGNode* CFG_right;
+
+    const char* filename = "cfg.dot";
+    FILE* file = fopen(filename, "w");
+    fclose(file);
 
     int call_func_num = 0;
 
@@ -145,6 +189,7 @@ void create_CFG(struct ast* temp_root, int root_id){
     int size = 0;              
     char* AST_result[MAX_CAPACITY]; 
     middle_traverse_ast(temp_root, AST_result, &size);
+
     for (int i = 0;i < size;i++){
         printf("%s\n",AST_result[i]);
     }
@@ -237,12 +282,12 @@ void create_CFG(struct ast* temp_root, int root_id){
             continue;
         }
         char* currentOperation = operationStack->data[operationStack->top];
-        //printf("%s\n",currentOperation);
+        printf("%s\n",currentOperation);
 
         if (strcmp(currentOperation,"definefun") == 0){
             strcpy(CFG_current ->CFGInfo,AST_result[i]);
-            root_id++;
-            struct CFGNode* CFG_next = createNode(root_id);
+            (*root_id)++;
+            struct CFGNode* CFG_next = createNode(*root_id);
             char* tempOperationReturn = pop(operationStack);
             CFG_current ->succ1 = CFG_next;
             CFG_next ->pred1 = CFG_current;
@@ -252,8 +297,8 @@ void create_CFG(struct ast* temp_root, int root_id){
 
         if (strcmp(currentOperation,"main") == 0){
             strcpy(CFG_current ->CFGInfo,AST_result[i]);
-            root_id++;
-            struct CFGNode* CFG_next = createNode(root_id);
+            (*root_id)++;
+            struct CFGNode* CFG_next = createNode(*root_id);
             char* tempOperationReturn = pop(operationStack);
             CFG_current ->succ1 = CFG_next;
             CFG_next ->pred1 = CFG_current;
@@ -278,8 +323,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 current_position = RIGHTPOINT;
 
                 strcpy(CFG_current->CFGInfo,CFGInfo);
-                root_id++;
-                struct CFGNode* CFG_next = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next;
                 CFG_next ->pred1 = CFG_current;
                 CFG_current = CFG_next;
@@ -296,8 +341,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 push(rightStack,vname1);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo1);
-                root_id++;
-                struct CFGNode* CFG_next1 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next1 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next1;
                 CFG_next1 ->pred1 = CFG_current;
                 CFG_current = CFG_next1;
@@ -317,8 +362,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 push(rightStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2; 
@@ -346,8 +391,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 push(rightStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2; 
@@ -368,8 +413,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 push(leftStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2; 
@@ -402,8 +447,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 push(rightStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2; 
@@ -423,9 +468,10 @@ void create_CFG(struct ast* temp_root, int root_id){
                 push(leftStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                CFG_IF_FRONT[CFG_IF_FRONT_num] = CFG_current->pred1;
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+
+                CFG_IF_FRONT[CFG_IF_FRONT_num] = CFG_current;
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2; 
@@ -434,8 +480,8 @@ void create_CFG(struct ast* temp_root, int root_id){
             }
 
             if (current_position == MIDDLEPOINT){
-                // root_id++;
-                // struct CFGNode* CFG_next2 = createNode(root_id);
+                // (*root_id)++;
+                // struct CFGNode* CFG_next2 = createNode(*root_id);
                 // CFG_IF_FRONT[CFG_IF_FRONT_num]->succ2 = CFG_next2;
                 // CFG_next2 ->pred1 = CFG_IF_FRONT[CFG_IF_FRONT_num];
                 // CFG_current = CFG_next2;                
@@ -448,12 +494,10 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s", vname2, AST_result[i]);
                 push(middleStack,vname2);
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-
-
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num] = CFG_current;
 
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_IF_FRONT[CFG_IF_FRONT_num]->succ2 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_IF_FRONT[CFG_IF_FRONT_num];  
                 CFG_current = CFG_next2;             
@@ -471,12 +515,12 @@ void create_CFG(struct ast* temp_root, int root_id){
                 char* CFGInfo2 = malloc(len_CFGInfo2 + 1);
                 sprintf(vname2, "v%d", CFG_current->id);         
                 sprintf(CFGInfo2, "%s:=%s", vname2, AST_result[i]);
+                push(rightStack,vname2);
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
 
-                push(rightStack,vname2);
 
-                
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2; 
@@ -484,6 +528,10 @@ void create_CFG(struct ast* temp_root, int root_id){
                 CFG_current->pred2 = CFG_IF_BEHIND[CFG_IF_BEHIND_num];
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num]->succ1 = CFG_current;
                 if_symbol = 1;
+                // printf("CFG: %s\n",CFG_current->CFGInfo);
+                // printf("CFG: %s\n",CFG_current->pred1->CFGInfo);
+                // printf("CFG: %s\n",CFG_current->pred2->CFGInfo);
+
 
 
                 //printf("CFGInfo: %s\n",CFG_current->CFGInfo);
@@ -507,8 +555,8 @@ void create_CFG(struct ast* temp_root, int root_id){
         //         current_position = RIGHTPOINT;
 
         //         strcpy(CFG_current->CFGInfo,CFGInfo);
-        //         root_id++;
-        //         struct CFGNode* CFG_next = createNode(root_id);
+        //         (*root_id)++;
+        //         struct CFGNode* CFG_next = createNode(*root_id);
         //         CFG_current ->succ1 = CFG_next;
         //         CFG_next ->pred1 = CFG_current;
         //         CFG_current = CFG_next;
@@ -527,7 +575,7 @@ void create_CFG(struct ast* temp_root, int root_id){
             if (operationStack->top == -1) {
             break;
             }
-            char* currentOperation = operationStack->data[operationStack->top];
+            currentOperation = operationStack->data[operationStack->top];
 
 
             if (strcmp(currentOperation,"add") == 0){
@@ -541,8 +589,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s PLUS %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -580,8 +628,10 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s MULT %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+
+
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -589,6 +639,8 @@ void create_CFG(struct ast* temp_root, int root_id){
 
                 positionNum--;
                 current_position = positionList[positionNum];
+                // printf("current_position:%s\n",positionToString(current_position));
+                // printf("operation: %s\n",operationStack->data[operationStack->top]);
                 positionList[positionNum] = '\0';
 
                 if (current_position == LEFTPOINT){
@@ -613,8 +665,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s SUB %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -646,8 +698,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s DIV %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -679,8 +731,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s MOD %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -713,8 +765,8 @@ void create_CFG(struct ast* temp_root, int root_id){
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
 
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -746,8 +798,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s SMALLER %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -779,8 +831,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s GREATER %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -812,8 +864,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s PLUS %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -845,8 +897,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s NOT SMALLER %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -878,8 +930,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s AND %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -911,8 +963,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s OR %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -942,8 +994,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s", leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -965,8 +1017,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:= NOT %s", vname2, rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -1000,8 +1052,8 @@ void create_CFG(struct ast* temp_root, int root_id){
                 sprintf(CFGInfo2, "%s:=%s(%s,%s)", vname2,middleChar,leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                (*root_id)++;
+                struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
                 CFG_next2 ->pred1 = CFG_current;
                 CFG_current = CFG_next2;
@@ -1022,13 +1074,10 @@ void create_CFG(struct ast* temp_root, int root_id){
                 }
             }
         
-            if(strcmp(currentOperation,"if") == 0){
-                char* tempOperationReturn = pop(operationStack);
-            }
+
         }
         
     
-
         if (operationStack->top == -1) {
             continue;
         }
@@ -1036,63 +1085,29 @@ void create_CFG(struct ast* temp_root, int root_id){
 
         if(strcmp(tempCurrentOperation,"if") == 0){
             if (current_position == LEFTPOINT){
+                // printf("leftpoint.\n");
                 CFG_IF_FRONT[CFG_IF_FRONT_num] = CFG_current->pred1;
-//                printf("CFGInfo: %s\n",CFG_IF_FRONT[CFG_IF_FRONT_num]->CFGInfo);
                 current_position = MIDDLEPOINT;
                 continue;
             }
 
             if (current_position == MIDDLEPOINT){
-
-                // int len_vname2 = snprintf(NULL, 0, "v%d", CFG_current->id);
-                // int len_CFGInfo2 = len_vname2 + strlen(":=") + strlen(AST_result[i]);
-                // char* vname2 = malloc(len_vname2 + 1);
-                // char* CFGInfo2 = malloc(len_CFGInfo2 + 1);
-                // sprintf(vname2, "v%d", CFG_current->id);         
-                // sprintf(CFGInfo2, "%s:=%s", vname2, AST_result[i]);
-                // push(middleStack,vname2);
-                // strcpy(CFG_current->CFGInfo,CFGInfo2);
-
-
-                // CFG_IF_BEHIND[CFG_IF_BEHIND_num] = CFG_current;
-
-                // root_id++;
-                // struct CFGNode* CFG_next2 = createNode(root_id);
-                // CFG_IF_FRONT[CFG_IF_FRONT_num]->succ2 = CFG_next2;
-                // CFG_next2 ->pred1 = CFG_IF_FRONT[CFG_IF_FRONT_num];  
-                // CFG_current = CFG_next2;         
-
+                // printf("middlepoint.\n");
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num] = CFG_current->pred1;
-//                printf("CFGInfo: %s\n",CFG_IF_BEHIND[CFG_IF_BEHIND_num]->CFGInfo);
-                root_id++;
-                struct CFGNode* CFG_next2 = createNode(root_id);
+                CFG_current->pred1->succ1 = NULL; 
+
                 CFG_IF_FRONT[CFG_IF_FRONT_num]->succ2 = CFG_current;
                 CFG_current ->pred1 = CFG_IF_FRONT[CFG_IF_FRONT_num];
                 current_position = RIGHTPOINT;
                 continue;
             }
-            if ((current_position == RIGHTPOINT) && if_symbol == 0){
-
-                // int len_vname2 = snprintf(NULL, 0, "v%d", CFG_current->id);
-                // int len_CFGInfo2 = len_vname2 + strlen(":=") + strlen(AST_result[i]);
-                // char* vname2 = malloc(len_vname2 + 1);
-                // char* CFGInfo2 = malloc(len_CFGInfo2 + 1);
-                // sprintf(vname2, "v%d", CFG_current->id);         
-                // sprintf(CFGInfo2, "%s:=%s", vname2, AST_result[i]);
-                // strcpy(CFG_current->CFGInfo,CFGInfo2);
-
-                // push(rightStack,vname2);
-                
-                // struct CFGNode* CFG_next2 = createNode(root_id);
-                // CFG_current ->succ1 = CFG_next2;
-                // CFG_next2 ->pred1 = CFG_current;
-                // CFG_current = CFG_next2; 
-
-                // CFG_current->pred2 = CFG_IF_BEHIND[CFG_IF_BEHIND_num];
-                // if_symbol = 1;
-
-                CFG_current ->pred2 = CFG_IF_BEHIND[CFG_IF_BEHIND_num];
-                CFG_IF_BEHIND[CFG_IF_BEHIND_num] ->succ1 = CFG_current;
+            if ((current_position == RIGHTPOINT) && (if_symbol == 0)){
+                // printf("rightpoint.\n");
+                CFG_current->pred2 = CFG_IF_BEHIND[CFG_IF_BEHIND_num];
+                CFG_IF_BEHIND[CFG_IF_BEHIND_num]->succ1 = CFG_current;
+                printf("CFG_value:%s\n",CFG_current->CFGInfo);
+                // printf("CFG_value2:%s\n",CFG_current->pred1->CFGInfo);
+                // printf("CFG_value3:%s\n",CFG_current->pred2->CFGInfo);
 
             }
 
@@ -1115,13 +1130,14 @@ void create_CFG(struct ast* temp_root, int root_id){
             //printf("CFGInfo: %s\n",CFG_current->CFGInfo);
 
 
-            // printf("CFGInfo: %s\n",CFG_current->CFGInfo);
-            // printf("CFGInfo: %s\n",CFG_current->pred1->CFGInfo);
-            // printf("CFGInfo: %s\n",CFG_current->pred2->CFGInfo);
-            // printf("CFGInfo: %s\n",CFG_current->pred1->pred1->CFGInfo);
-            // printf("CFGInfo: %s\n",CFG_current->pred2->pred1->CFGInfo);
-            root_id++;
-            struct CFGNode* CFG_next2 = createNode(root_id);
+            printf("CFGInfo1: %s\n",CFG_current->CFGInfo);
+            printf("CFGInfo2: %s\n",CFG_current->pred1->CFGInfo);
+            printf("CFGInfo3: %s\n",CFG_current->pred2->CFGInfo);
+            //printf("CFGInfo4: %s\n",CFG_current->succ1->CFGInfo);
+
+
+            (*root_id)++;
+            struct CFGNode* CFG_next2 = createNode(*root_id);
             CFG_current ->succ1 = CFG_next2;
             CFG_next2 ->pred1 = CFG_current;
             CFG_current = CFG_next2;
@@ -1130,6 +1146,7 @@ void create_CFG(struct ast* temp_root, int root_id){
             positionNum--;
             current_position = positionList[positionNum];
             positionList[positionNum] = '\0';
+            printf("current_position: %s\n",positionToString(current_position));
 
             CFG_IF_FRONT_num++;
             CFG_IF_BEHIND_num++;
@@ -1146,15 +1163,13 @@ void create_CFG(struct ast* temp_root, int root_id){
             }
         }
 
+    dot_CFG(CFG_root);
+
     }
     printCFG(CFG_root);
+    system("dot -Tpdf cfg.dot -o cfg.pdf");
     printf("\n");
-
 }
-
-
-
-                
 
 
 

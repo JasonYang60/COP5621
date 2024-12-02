@@ -10,6 +10,7 @@ typedef struct CFGNode {
     struct CFGNode* succ1; 
     struct CFGNode* succ2; 
     char* CFGInfo;
+    bool visited;   
 } CFGNode;
 
 typedef enum {
@@ -27,7 +28,7 @@ typedef struct Stack {
 
 
 
-void create_CFG(struct ast* temp_root, int root_id);
+void create_CFG(struct ast* temp_root, int* root_id, int* dot_id);
 void middle_traverse_ast(struct ast* temp_root, char** result, int* size);
 void printCFG(CFGNode* CFGroot);
 
