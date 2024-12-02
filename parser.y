@@ -4,7 +4,6 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include "ast.h"
-    #include "SymbolTable.h"
 %}
 
 %union {
@@ -35,7 +34,6 @@
 %type <ival>retexprType
 %type <ival> exprType
 %type <sval>var fun
-%type <ival>deffunint localvarint
 %type <ival>varint funint
 
 %type <ival>inputlist
@@ -49,58 +47,43 @@
 %type <ival>definefun
 %type <ival>exprlist
 %type <ival>entry
+%type <ival>mainexpr
 %type <ival>empty
 %%
 
-program : definefun program  {get_order("start");}
-        | entry PRINT expr RIGHT {
-                insert_children(2, $1, $3); insert_node("entry", 1);
-                checkPrint();
+//insert_children(2, $1, $2); insert_node("entry", 1);
 
+program : definefun program  {}
+        | mainexpr {}
+// entry : LEFT {$$ = insert_node("main", 0);}
+mainexpr : LEFT PRINT expr RIGHT {
+                insert_child($3);
+                $$ = insert_node("main", 1);
         }
-entry : LEFT {$$ = insert_node("print", 0);
-                push("print");
-                addFunc();
-                }
-definefun : LEFT DEFINEFUN deffunint inputlistentry retexprType expr RIGHT {
+definefun : LEFT DEFINEFUN funint inputlistentry retexprType expr RIGHT {
                 insert_children(4, $3, $4, $5, $6); 
                 $$ = insert_node("definefun", 0);
-
-                get_order("def fun");
-
-                //char* str = (char*)malloc(64 * sizeof(char)); strcpy(str, "unknown_name");
-                //struct SymbolTable* sym = createSymbolTableEntry(str);
-                //printSymbolTable(sym);
-                //printf("%d\n", get_current_scope());
-                addFunc();
-                checkFunc();
                 }
 
-inputlistentry  : inputlist {insert_child($1); $$ = insert_node("inputlist", 0); }
+inputlistentry  : inputlist {insert_child($1); $$ = insert_node("inputlist", 0);}
 inputlist: empty {$$ = $1;}
-        | LEFT varint exprType RIGHT  {
-                $$ = $2; 
-                get_order("inputlist");
-                incCounter();
-                } 
+        | LEFT varint exprType RIGHT  {$$ = $2; } 
         | LEFT varint exprType RIGHT inputlist {
                 $$ = $2; 
                 insert_child($5);
-                get_order("inputlist");
-                incCounter();
                 } 
-exprType: INT {setType(1);}
-        | BOOL  {setType(2);}
-retexprType: INT  {$$ = insert_node_type("ret INT", 3, 1); }
-        | BOOL {$$ = insert_node_type("ret BOOL", 4, 2); }
-expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node_type(str,1,1); }
+exprType: INT {}
+        | BOOL  {}
+retexprType: INT  {$$ = insert_node("ret INT", 3); }
+        | BOOL {$$ = insert_node("ret BOOL", 4);}
+expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node(str,1); }
         | varint { $$ = $1;}
         | LEFT GETINT RIGHT{
-                $$ = insert_node_type("GETINT", 6, 1);
+                $$ = insert_node("GETINT", 6);
                 }
-        | TRUE{$$ = insert_node_type("true", 7, 2); }
-        | FALSE{$$ = insert_node_type("false", 8, 2); }
-        | LEFT GETBOOL RIGHT{ $$ = insert_node_type("GETBOOL", 9, 2); }
+        | TRUE{$$ = insert_node("true", 7); }
+        | FALSE{$$ = insert_node("false", 8); }
+        | LEFT GETBOOL RIGHT{ $$ = insert_node("GETBOOL", 9); }
         | addTerm{$$ = $1;}
         | multiplyTerm{$$ = $1; }
         | minusTerm{$$ = $1; }
@@ -110,25 +93,19 @@ expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d"
         | LEFT funint exprlist RIGHT{ 
                 insert_children(2, $2, $3); 
                 $$ = insert_node("call func", 1);
-
-                //printFunc();
-                checkCall();
                 }
-        | LEFT LET LEFT localvarint expr RIGHT expr RIGHT {
+        | LEFT LET LEFT varint expr RIGHT expr RIGHT {
                 insert_children(3, $4, $5, $7);
                 $$ = insert_node("let", 12);
-
-                get_order("let");
-                checkLocal();
                 }
-        | LEFT EQUAL expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node_type("=", 13, 2);}
-        | LEFT SMALLER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node_type("<", 14, 2);}
-        | LEFT GREATER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node_type(">", 15, 2);}
-        | LEFT NOTGREATER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node_type("<=", 16, 2);}
-        | LEFT NOTSMALLER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node_type(">=", 17, 2);}
-        | LEFT NOT expr RIGHT{insert_child($3);$$ = insert_node_type("not", 18, 2);}
-        | LEFT AND expr oneExprOrMore RIGHT{insert_child($3);insert_child($4);$$ = insert_node_type("and", 19, 2);}
-        | LEFT OR expr oneExprOrMore RIGHT{insert_child($3);insert_child($4);$$ = insert_node_type("or", 20, 2);}
+        | LEFT EQUAL expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("equal", 13);}
+        | LEFT SMALLER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("smaller", 14);}
+        | LEFT GREATER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("greater", 15);}
+        | LEFT NOTGREATER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("notgreater", 16);}
+        | LEFT NOTSMALLER expr expr RIGHT{insert_child($3); insert_child($4);$$ = insert_node("notsmallar", 17);}
+        | LEFT NOT expr RIGHT{insert_child($3);$$ = insert_node("not", 18);}
+        | LEFT AND expr oneExprOrMore RIGHT{insert_child($3);insert_child($4);$$ = insert_node("and", 19);}
+        | LEFT OR expr oneExprOrMore RIGHT{insert_child($3);insert_child($4);$$ = insert_node("or", 20);}
 
        
 oneExprOrMore   : expr{$$ = $1;}
@@ -136,62 +113,34 @@ oneExprOrMore   : expr{$$ = $1;}
 addTerm : LEFT ADD expr oneExprOrMore RIGHT{
         insert_child($3); 
         insert_child($4);
-        $$ = insert_node_type("+", 0, 1); 
+        $$ = insert_node("add", 0); 
         }
 multiplyTerm    : LEFT MUL expr oneExprOrMore RIGHT{
         insert_child($3); 
         insert_child($4);
-        $$ = insert_node_type("*", 0, 1); 
+        $$ = insert_node("mul", 0); 
         }
 minusTerm   : LEFT MINUS expr expr RIGHT{
         insert_child($3); 
         insert_child($4);
-        $$ = insert_node_type("-", 0, 1); 
+        $$ = insert_node("minus", 0); 
         }
 divTerm : LEFT DIV expr expr RIGHT{
         insert_child($3); 
         insert_child($4);
-        $$ = insert_node_type("div", 0, 1); 
+        $$ = insert_node("div", 0); 
         }
 modTerm : LEFT MOD expr expr RIGHT{
         insert_child($3); 
         insert_child($4);
-        $$ = insert_node_type("mod", 0, 1); 
+        $$ = insert_node("mod", 0); 
         }
 
 exprlist    : empty {$$ = $1;}
-            | expr {$$ = $1; get_order("exprlist"); incArgCounter(); }
-            | expr exprlist {
-                $$ = $1; insert_child($2);
-                get_order("exprlist");
-                incArgCounter();
-                }
-      
-funint : fun {char* str = (
-        char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); get_order(str); 
-        push(str);
-        LocalTablePush();
-        }
-deffunint : fun {
-        char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); 
-        
-        get_order(str);
-        push(str);
-        }
-varint : var {
-        char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);
-        
-        get_order(str); 
-        push(str);
-        
-        }
-localvarint : var {
-        char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);
-        
-        get_order(str); 
-        push(str);
-        LocalTablePush();
-        }
+            | expr {$$ = $1;}
+            | expr exprlist {$$ = $1; insert_child($2);}
+funint : fun {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
+varint : var {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
 empty : /* empty */ {$$ = insert_node("none", 1); }
 fun : VARNAME 
 var : VARNAME 

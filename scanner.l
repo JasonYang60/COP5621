@@ -2,14 +2,12 @@
 #include <stdio.h>
 #include <errno.h>
 #include "y.tab.h"
-#include "SymbolTable.h"
-
 %}
 
 %%
 
-\(      {entry_scope();return LEFT;}
-\)      {exit_scope();return RIGHT;}
+\(      {return LEFT;}
+\)      {return RIGHT;}
 \+        {return ADD;}
 \-        {return MINUS;}
 \*        {return MUL;}
@@ -48,11 +46,6 @@ print          { return PRINT;}
 [ \t\n]+    { /* ignored */ }
 .         { printf("Error: Unexpected character: '%s'\n", yytext); perror("Lexical Error."); exit(-1);}
 %%
-
-
-int yywrap() {
-    return 1;
-}
 
 //int main(void) {
 //    yylex();
