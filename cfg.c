@@ -33,15 +33,14 @@ void freeNode(CFGNode* node) {
 void printCFG(CFGNode* CFGroot){
     CFGNode* tempCFGNode = CFGroot;
     while(tempCFGNode != NULL){
-        // if (tempCFGNode->succ1 == NULL){
-        //     tempCFGNode->pred1->succ1 = NULL;
-        //     break;
-        // }
-        printf("%s\n",tempCFGNode->CFGInfo);
         tempCFGNode = tempCFGNode->succ1;
+        if (tempCFGNode->succ1 == NULL){
+            tempCFGNode->pred1->succ1 = NULL;
+            break;
+        }
     }
-
 }
+
 
 Stack* createStack(int capacity) {
     Stack* stack = (Stack*)malloc(sizeof(Stack));
@@ -119,13 +118,9 @@ void dot_dfs(FILE *fp,CFGNode* node) {
 }
 
 
-void dot_CFG(CFGNode* CFG_root){
-    FILE *fp = fopen("cfg.dot", "a");
-    fprintf(fp, "digraph print {\n ");
+void dot_CFG(CFGNode* CFG_root,FILE* fp){
     CFGNode* tempCFGNode = CFG_root;
     dot_dfs(fp,tempCFGNode);
-    fprintf(fp, "}\n ");
-    fclose(fp);
 }
 
 
@@ -150,21 +145,21 @@ void middle_traverse_ast(struct ast* temp_root, char** result, int* size){
 }
 
 
-void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
+void create_CFG(struct ast* temp_root, int* root_id, int* dot_id,FILE* fp){
     struct CFGNode* CFG_root = createNode(*root_id);
     struct CFGNode* CFG_current = CFG_root;
     struct CFGNode* CFG_IF_FRONT[MAX_CAPACITY];
-    int CFG_IF_FRONT_num = 0;
-    CFG_IF_FRONT[CFG_IF_FRONT_num] = NULL;
     struct CFGNode* CFG_IF_BEHIND[MAX_CAPACITY];
-    int CFG_IF_BEHIND_num = 0;
-    CFG_IF_BEHIND[CFG_IF_BEHIND_num] = NULL;
+    int CFG_IF_FRONT_num = -1;
+    int CFG_IF_BEHIND_num = -1;
+    CFG_IF_FRONT[0] = NULL;
+    CFG_IF_BEHIND[0] = NULL;
     struct CFGNode* CFG_left;
     struct CFGNode* CFG_right;
 
-    const char* filename = "cfg.dot";
-    FILE* file = fopen(filename, "w");
-    fclose(file);
+    // const char* filename = "cfg.dot";
+    // FILE* file = fopen(filename, "w");
+    // fclose(file);
 
     int call_func_num = 0;
 
@@ -173,7 +168,6 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
     Position current_position = LEFTPOINT;
     Position* positionList = (Position*)malloc(MAX_CAPACITY * sizeof(Position));
     int positionNum = 0;
-
 
     Stack* operationStack; 
     Stack* leftStack; 
@@ -190,11 +184,9 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
     char* AST_result[MAX_CAPACITY]; 
     middle_traverse_ast(temp_root, AST_result, &size);
 
-    for (int i = 0;i < size;i++){
-        printf("%s\n",AST_result[i]);
-    }
-
-    printf("\n\n");
+    // for (int i = 0;i < size;i++){
+    //     printf("%s\n",AST_result[i]);
+    // }
 
 
 
@@ -281,8 +273,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
         if (operationStack->top == -1) {
             continue;
         }
-        char* currentOperation = operationStack->data[operationStack->top];
-        printf("%s\n",currentOperation);
+        char* currentOperation = operationStack->data[operationStack->top]; // consider the current operation
 
         if (strcmp(currentOperation,"definefun") == 0){
             strcpy(CFG_current ->CFGInfo,AST_result[i]);
@@ -362,6 +353,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 push(rightStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
+                // printf("CFGinfo: %s\n",CFG_current->CFGInfo);
                 (*root_id)++;
                 struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
@@ -399,7 +391,6 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
             }
 
         }
-
 
         if (strcmp(currentOperation,"call func") == 0){
             if (current_position == LEFTPOINT){
@@ -455,7 +446,6 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
             }
         }
 
-
         if (strcmp(currentOperation,"if") == 0){
             if (current_position == LEFTPOINT){
                 int len_vname2 = snprintf(NULL, 0, "v%d", CFG_current->id);
@@ -468,7 +458,9 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 push(leftStack,vname2);
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
+                // printf("CFGinfo if: %s\n",CFG_current->CFGInfo);
 
+                CFG_IF_FRONT_num++;
                 CFG_IF_FRONT[CFG_IF_FRONT_num] = CFG_current;
                 (*root_id)++;
                 struct CFGNode* CFG_next2 = createNode(*root_id);
@@ -484,7 +476,8 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 // struct CFGNode* CFG_next2 = createNode(*root_id);
                 // CFG_IF_FRONT[CFG_IF_FRONT_num]->succ2 = CFG_next2;
                 // CFG_next2 ->pred1 = CFG_IF_FRONT[CFG_IF_FRONT_num];
-                // CFG_current = CFG_next2;                
+                // CFG_current = CFG_next2;
+
 
                 int len_vname2 = snprintf(NULL, 0, "v%d", CFG_current->id);
                 int len_CFGInfo2 = len_vname2 + strlen(":=") + strlen(AST_result[i]);
@@ -494,6 +487,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 sprintf(CFGInfo2, "%s:=%s", vname2, AST_result[i]);
                 push(middleStack,vname2);
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
+                CFG_IF_BEHIND_num++;
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num] = CFG_current;
 
                 (*root_id)++;
@@ -527,20 +521,10 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
 
                 CFG_current->pred2 = CFG_IF_BEHIND[CFG_IF_BEHIND_num];
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num]->succ1 = CFG_current;
+
                 if_symbol = 1;
-                // printf("CFG: %s\n",CFG_current->CFGInfo);
-                // printf("CFG: %s\n",CFG_current->pred1->CFGInfo);
-                // printf("CFG: %s\n",CFG_current->pred2->CFGInfo);
-
-
-
-                //printf("CFGInfo: %s\n",CFG_current->CFGInfo);
-                // printf("CFGInfo: %s\n",CFG_current->pred1->CFGInfo);
-                // printf("CFGInfo: %s\n",CFG_current->pred2->CFGInfo);
- //               printf("CFGInfo: %s\n",CFG_IF_BEHIND[CFG_IF_BEHIND_num]->CFGInfo);
             }
         }
-
 
         // if (strcmp(currentOperation,"let")){
         //     if (current_position == LEFTPOINT){
@@ -610,11 +594,28 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                     push(middleStack,vname2);
                 }
 
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
                 
-                // char tempchar[10] = "here!";
-                // if(strcmp(tempchar,"here!") == 0){
-                //     break;
-                // }
             }
 
             if (strcmp(currentOperation,"mul") == 0){
@@ -639,7 +640,6 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
 
                 positionNum--;
                 current_position = positionList[positionNum];
-                // printf("current_position:%s\n",positionToString(current_position));
                 // printf("operation: %s\n",operationStack->data[operationStack->top]);
                 positionList[positionNum] = '\0';
 
@@ -651,6 +651,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 }
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
+                }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
                 }
             }
 
@@ -665,6 +688,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 sprintf(CFGInfo2, "%s:=%s SUB %s", vname2, leftChar,rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
+
                 (*root_id)++;
                 struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
@@ -684,6 +708,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 }
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
+                }
+
+ 
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
                 }
             }
 
@@ -718,6 +765,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+                
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
             }   
             
             if (strcmp(currentOperation,"mod") == 0){
@@ -751,6 +821,31 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
+
+                
             }
                
             if (strcmp(currentOperation,"equal") == 0){
@@ -785,6 +880,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
             }
 
             if (strcmp(currentOperation,"smaller") == 0){
@@ -817,6 +935,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 }
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
+                }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
                 }
             }
         
@@ -851,6 +992,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
             }
         
             if (strcmp(currentOperation,"notgreater") == 0){
@@ -884,6 +1048,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
             }
         
             if (strcmp(currentOperation,"notsmallar") == 0){
@@ -916,7 +1103,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 }
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
-                }       
+                }
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }      
             }
         
             if (strcmp(currentOperation,"and") == 0){
@@ -950,6 +1159,28 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
             }
                 
             if (strcmp(currentOperation,"or") == 0){
@@ -982,6 +1213,29 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 }
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
+                }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
                 }
             }
 
@@ -1017,6 +1271,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 sprintf(CFGInfo2, "%s:= NOT %s", vname2, rightChar); 
 
                 strcpy(CFG_current->CFGInfo,CFGInfo2);
+                // printf("CFGinfo: %s\n",CFG_current->CFGInfo);
                 (*root_id)++;
                 struct CFGNode* CFG_next2 = createNode(*root_id);
                 CFG_current ->succ1 = CFG_next2;
@@ -1036,6 +1291,30 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 }
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
+                }
+
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         printf("yes!\n");
+                    //         break;
+                    //     }
+                    // }
                 }
             }
                        
@@ -1072,6 +1351,28 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 else if(current_position == MIDDLEPOINT){
                     push(middleStack,vname2);
                 }
+
+                if (operationStack->top > -1) {
+                    char* tempCurrentOperation = operationStack->data[operationStack->top];
+                    if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                    (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                    (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                        if (current_position == LEFTPOINT){
+                            current_position = RIGHTPOINT;
+                            break;
+                        }
+                    }
+                    // if (strcmp(tempCurrentOperation,"if") == 0) {
+                    //     if (current_position == LEFTPOINT){
+                    //         current_position = MIDDLEPOINT;
+                    //         break;
+                    //     }
+                    //     if (current_position == MIDDLEPOINT){
+                    //         current_position = RIGHTPOINT;
+                    //         break;
+                    //     }
+                    // }
+                }
             }
         
 
@@ -1081,11 +1382,12 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
         if (operationStack->top == -1) {
             continue;
         }
-        char* tempCurrentOperation = operationStack->data[operationStack->top];
+        currentOperation = operationStack->data[operationStack->top];
 
-        if(strcmp(tempCurrentOperation,"if") == 0){
+        if(strcmp(currentOperation,"if") == 0){
             if (current_position == LEFTPOINT){
                 // printf("leftpoint.\n");
+                CFG_IF_FRONT_num++;
                 CFG_IF_FRONT[CFG_IF_FRONT_num] = CFG_current->pred1;
                 current_position = MIDDLEPOINT;
                 continue;
@@ -1093,6 +1395,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
 
             if (current_position == MIDDLEPOINT){
                 // printf("middlepoint.\n");
+                CFG_IF_BEHIND_num++;
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num] = CFG_current->pred1;
                 CFG_current->pred1->succ1 = NULL; 
 
@@ -1105,7 +1408,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
                 // printf("rightpoint.\n");
                 CFG_current->pred2 = CFG_IF_BEHIND[CFG_IF_BEHIND_num];
                 CFG_IF_BEHIND[CFG_IF_BEHIND_num]->succ1 = CFG_current;
-                printf("CFG_value:%s\n",CFG_current->CFGInfo);
+                // printf("CFG_value:%s\n",CFG_current->CFGInfo);
                 // printf("CFG_value2:%s\n",CFG_current->pred1->CFGInfo);
                 // printf("CFG_value3:%s\n",CFG_current->pred2->CFGInfo);
 
@@ -1127,12 +1430,14 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
 
             strcpy(CFG_current->CFGInfo,CFGInfo2);
 
-            //printf("CFGInfo: %s\n",CFG_current->CFGInfo);
+            // printf("step %d %s\n",i,CFG_current->pred1->CFGInfo);
+            // printf("step %d %S\n",i,CFG_current->pred2->CFGInfo);
+            // printf("CFGInfo2 %d: %s\n",i, CFG_current->pred1->CFGInfo);
+            // printf("CFGInfo3 %d: %s\n",i, CFG_current->pred2->CFGInfo);
 
 
-            printf("CFGInfo1: %s\n",CFG_current->CFGInfo);
-            printf("CFGInfo2: %s\n",CFG_current->pred1->CFGInfo);
-            printf("CFGInfo3: %s\n",CFG_current->pred2->CFGInfo);
+            // printf("CFGInfo1: %s\n",CFG_current->CFGInfo);
+
             //printf("CFGInfo4: %s\n",CFG_current->succ1->CFGInfo);
 
 
@@ -1142,14 +1447,17 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
             CFG_next2 ->pred1 = CFG_current;
             CFG_current = CFG_next2;
             char* tempOperationReturn = pop(operationStack);
+            // printf("current operation:%s\n.",tempOperationReturn);
+            // printf("next operation:%s\n.",operationStack->data[operationStack->top]);
 
             positionNum--;
             current_position = positionList[positionNum];
             positionList[positionNum] = '\0';
-            printf("current_position: %s\n",positionToString(current_position));
 
-            CFG_IF_FRONT_num++;
-            CFG_IF_BEHIND_num++;
+            CFG_IF_FRONT[CFG_IF_FRONT_num] = NULL;
+            CFG_IF_FRONT_num--;
+            CFG_IF_BEHIND[CFG_IF_BEHIND_num] = NULL;
+            CFG_IF_BEHIND_num--;
             if_symbol = 0;
 
             if (current_position == LEFTPOINT){
@@ -1161,13 +1469,38 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
             else if(current_position == MIDDLEPOINT){
                 push(middleStack,vname2);
             }
-        }
 
-    dot_CFG(CFG_root);
+
+            
+            if (operationStack->top > -1) {
+                char* tempCurrentOperation = operationStack->data[operationStack->top];
+                if ((strcmp(tempCurrentOperation,"add") == 0) || (strcmp(tempCurrentOperation,"mul") == 0) || (strcmp(tempCurrentOperation,"minus") == 0) || (strcmp(tempCurrentOperation,"div") == 0) || (strcmp(tempCurrentOperation,"mod") == 0) ||
+                (strcmp(tempCurrentOperation,"equal") == 0) || (strcmp(tempCurrentOperation,"smaller") == 0) || (strcmp(tempCurrentOperation,"greater") == 0) || (strcmp(tempCurrentOperation,"notgreater") == 0) || (strcmp(tempCurrentOperation,"notsmallar") == 0) || 
+                (strcmp(tempCurrentOperation,"and") == 0) || (strcmp(tempCurrentOperation,"or") == 0) || (strcmp(tempCurrentOperation,"let") == 0)){
+                    if (current_position == LEFTPOINT){
+                        current_position = RIGHTPOINT;
+                    }
+                }
+                if (strcmp(tempCurrentOperation,"if") == 0) {
+                    if (current_position == LEFTPOINT){
+                        CFG_IF_FRONT[CFG_IF_FRONT_num] = CFG_current->pred1;
+                        current_position = MIDDLEPOINT;
+                    }
+                    else if (current_position == MIDDLEPOINT){
+                        CFG_IF_BEHIND[CFG_IF_BEHIND_num] = CFG_current->pred1;
+                        CFG_current->pred1->succ1 = NULL; 
+
+                        CFG_IF_FRONT[CFG_IF_FRONT_num]->succ2 = CFG_current;
+                        CFG_current ->pred1 = CFG_IF_FRONT[CFG_IF_FRONT_num];
+                        current_position = RIGHTPOINT;
+                    }
+                }
+            }
+        }
 
     }
     printCFG(CFG_root);
-    system("dot -Tpdf cfg.dot -o cfg.pdf");
+    dot_CFG(CFG_root,fp);
     printf("\n");
 }
 

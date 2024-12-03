@@ -1,0 +1,19 @@
+(print
+    (+  2024 
+        a1
+        b2
+        c3
+        2025
+        (- 2 3)
+        (* 3 4 5)
+        (div 2 
+            (mod (and (not false)
+                    false
+                    true
+                    (or b c)
+                )
+                e
+            )
+        )
+    )
+)
