@@ -440,7 +440,7 @@ int testGraph() {
     setTraverse(root[root_idx]);
     printf("function GETINT\nfunction GETBOOL\n");
     dfs(root[root_idx], llrr);
-    dfs(root[root_idx], printCFG);
+    // dfs(root[root_idx], printCFG);
 
 
     FILE* fp = fopen("cfg.dot", "w");
