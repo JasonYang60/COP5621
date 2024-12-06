@@ -1,3 +1,6 @@
+#ifndef CFG_H
+#define CFG_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +14,9 @@ typedef struct CFGNode {
     struct CFGNode* succ2; 
     char* CFGInfo;
     bool visited;   
+    struct CFGNode* traverse;
+    char* value;
+    int ori_id;
 } CFGNode;
 
 typedef enum {
@@ -26,9 +32,19 @@ typedef struct Stack {
 } Stack;
 
 
+CFGNode* createNode(int id);
 
-
-void create_CFG(struct ast* temp_root, int* root_id, int* dot_id,FILE* file);
+void create_CFG(struct ast* temp_root, int* root_id, int* dot_id);
 void middle_traverse_ast(struct ast* temp_root, char** result, int* size);
-void printCFG(CFGNode* CFGroot);
+void printCFGList(FILE* fp);
+int printCFG(CFGNode* node);
 
+extern CFGNode* cfgNodeList[1024];
+extern int cfgNodeList_idx;
+
+typedef int (*traverseFunc)(CFGNode*);
+void dfs(CFGNode* node, traverseFunc f);
+void reset_dfs(CFGNode* node);
+void dot_CFG(CFGNode* CFG_root,FILE* fp);
+
+#endif // CFG_H

@@ -4,6 +4,8 @@
  *
  * (c) FSU
  **/
+#ifndef AST_H
+#define AST_H
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -41,7 +43,9 @@ void print_ast(); //    run "dot -Tpdf ast.dot -o ast.pdf" to create a PDF. Requ
 void free_ast();
 void traverse_ast_and_print();
 
- // static data structures used in the project:
+// static data structures used in the project:
 static int current_node_id = 0;
 static struct ast_child* ast_child_root = NULL;
 static struct ast* ast_list_root = NULL;
+
+#endif // AST_H

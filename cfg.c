@@ -4,23 +4,29 @@
 
 
 const int MAX_CAPACITY = 100;
-
+CFGNode* cfgNodeList[1024] = {NULL};
+int cfgNodeList_idx = 0;
 
 
 CFGNode* createNode(int id) {
     CFGNode* node = (CFGNode*)malloc(sizeof(CFGNode)); 
-   
+    cfgNodeList[id] = node;
     node->id = id;
     node->pred1 = NULL;
     node->pred2 = NULL;
     node->succ1 = NULL;
     node->succ2 = NULL;
-    node->visited = NULL;
+    node->visited = false;
+
+    node->traverse = NULL;
+    node->value = 0;
     
     node->CFGInfo = (char*)malloc(MAX_CAPACITY + 1);
+    node->value = (char*)malloc(MAX_CAPACITY + 1);
+    node->ori_id = -1;
+
     return node;
 }
-
 
 void freeNode(CFGNode* node) {
     if (node) {
@@ -29,16 +35,19 @@ void freeNode(CFGNode* node) {
     }
 }
 
-
-void printCFG(CFGNode* CFGroot){
-    CFGNode* tempCFGNode = CFGroot;
-    while(tempCFGNode != NULL){
-        tempCFGNode = tempCFGNode->succ1;
-        if (tempCFGNode->succ1 == NULL){
-            tempCFGNode->pred1->succ1 = NULL;
-            break;
-        }
+int printCFG(CFGNode* node){
+    if (node == NULL) {
+        return 1;
     }
+    char* name1 = node->succ1 ? node->succ1->CFGInfo : "null";
+    char* name2 = node->succ2 ? node->succ2->CFGInfo : "null";
+    char* name3 = node->pred1 ? node->pred1->CFGInfo : "null";
+    char* name4 = node->pred2 ? node->pred2->CFGInfo : "null";
+    printf("Node ID: %d, Info: %s \n\tsucc1: %s, succ2: %s\n\tpred1: %s, pred2 = %s\n", node->id, (node->CFGInfo ? node->CFGInfo : "NULL"), name1, name2, name3, name4);
+
+    char* name5 = node->traverse ? node->traverse->CFGInfo : "null";
+    printf("\ttraverse: %s\n", name5);
+    return 0;
 }
 
 
@@ -94,6 +103,7 @@ const char* positionToString(Position pos) {
 
                 
 void dot_printConnections(FILE *fp, CFGNode* node, CFGNode* next1, CFGNode* next2) {
+    if(strcmp(node->CFGInfo, "EXIT") == 0) {return;}
     if (next1) {
         fprintf(fp,"%d->%d\n", node->id, next1->id);
     }
@@ -103,18 +113,22 @@ void dot_printConnections(FILE *fp, CFGNode* node, CFGNode* next1, CFGNode* next
 }
 
 void dot_dfs(FILE *fp,CFGNode* node) {
-    if (node == NULL || node->visited) {
+    if (node == NULL) {
         return; 
     }
-    node->visited = true;
+    fprintf(fp, "%d [label=\"%s\", fontname=\"monospace\"];\n ", node->id, node->CFGInfo);
+    dot_printConnections(fp,node, node->succ1, node->succ2);
+
     if (node->succ1) {
-       dot_dfs(fp,node->succ1);
+        if(node->succ1->pred2 && (node->succ1->pred2 == node)) {
+            return;
+        }
+        dot_dfs(fp,node->succ1);
     }
     if (node->succ2) {
         dot_dfs(fp,node->succ2);
     }
-    fprintf(fp, "%d [label=\"%s\", fontname=\"monospace\"];\n ", node->id, node->CFGInfo);
-    dot_printConnections(fp,node, node->succ1, node->succ2);
+    
 }
 
 
@@ -126,6 +140,42 @@ void dot_CFG(CFGNode* CFG_root,FILE* fp){
 
 
 
+void dfs(CFGNode* node, traverseFunc f) {
+    if (node == NULL) {
+        return; 
+    }
+
+    // node->visited = true;
+    if(f(node)) {
+        perror("error\n");
+        exit(1);
+    }
+
+    if (node->succ1) {
+        if(node->succ1->pred2 && (node->succ1->pred1 == node)) {
+            return;
+        }
+        dfs(node->succ1, f);
+    }
+    if (node->succ2) {
+        dfs(node->succ2, f);
+    }
+
+}
+
+void reset_dfs(CFGNode* node) {
+    if (node == NULL || !node->visited) {
+        return; 
+    }
+    node->visited = false;
+
+    if (node->succ1) {
+        reset_dfs(node->succ1);
+    }
+    if (node->succ2) {
+        reset_dfs(node->succ2);
+    }
+}
 
 void middle_traverse_ast(struct ast* temp_root, char** result, int* size){
     //printf("%s\n",temp_root->token);
@@ -145,7 +195,7 @@ void middle_traverse_ast(struct ast* temp_root, char** result, int* size){
 }
 
 
-void create_CFG(struct ast* temp_root, int* root_id, int* dot_id,FILE* fp){
+void create_CFG(struct ast* temp_root, int* root_id, int* dot_id){
     struct CFGNode* CFG_root = createNode(*root_id);
     struct CFGNode* CFG_current = CFG_root;
     struct CFGNode* CFG_IF_FRONT[MAX_CAPACITY];
@@ -276,7 +326,7 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id,FILE* fp){
         char* currentOperation = operationStack->data[operationStack->top]; // consider the current operation
 
         if (strcmp(currentOperation,"definefun") == 0){
-            strcpy(CFG_current ->CFGInfo,AST_result[i]);
+            strcpy(CFG_current->CFGInfo,AST_result[i]);
             (*root_id)++;
             struct CFGNode* CFG_next = createNode(*root_id);
             char* tempOperationReturn = pop(operationStack);
@@ -1499,10 +1549,30 @@ void create_CFG(struct ast* temp_root, int* root_id, int* dot_id,FILE* fp){
         }
 
     }
-    printCFG(CFG_root);
-    dot_CFG(CFG_root,fp);
-    printf("\n");
+
+    {
+        cfgNodeList[cfgNodeList_idx] = CFG_root;
+        cfgNodeList_idx++;
+    }
+
+    
 }
 
 
+
+void printCFGList(FILE* fp) {
+    for (int i = 0; i < cfgNodeList_idx; i++){
+      CFGNode* CFG_root = cfgNodeList[i];
+    //   setTraverse(CFG_root);
+    //   reset_dfs(CFG_root);
+
+    //   dfs(CFG_root, lr);
+    //   reset_dfs(CFG_root);
+
+      // printCFG(CFG_root);
+      dot_CFG(CFG_root, fp);
+      reset_dfs(CFG_root);
+      printf("\n");
+    }
+}
 
