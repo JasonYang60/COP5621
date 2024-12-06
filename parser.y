@@ -140,7 +140,7 @@ exprlist    : empty {$$ = $1;}
             | expr {$$ = $1;}
             | expr exprlist {$$ = $1; insert_child($2);}
 funint : fun {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
-varint : var {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1);}
+varint : var {char* str = (char*)malloc(12 * sizeof(char)); strcpy(str, $1);  $$ = insert_node(str, 1); isVar($$);}
 empty : /* empty */ {$$ = insert_node("none", 1); }
 fun : VARNAME 
 var : VARNAME 

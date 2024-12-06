@@ -16,6 +16,7 @@ int cntAst(struct ast* node){
 CFGNode* graph[1024] = {NULL};
 int graphCnt = 0;
 void connect(int from, int to) {
+
     if(!root[from]->succ1) {
         root[from]->succ1 = root[to];
     } else if (!root[from]->succ2)
@@ -90,7 +91,6 @@ int create(struct ast* node) {
         cfg->traverse = root[cnt];
     }
     if(node->parent){
-
         if(strcmp(node->token, "if") == 0) {
             sprintf(cfg->CFGInfo, "IF v%d = true, then v%d := v%d, else v%d := v%d", 
                 node->child->id->id, 
@@ -166,9 +166,9 @@ int create(struct ast* node) {
         //     || strcmp(node->parent->token, "let") == 0 
         // ){
         // } else {
-        } else if(node->isNum) {
+        } else if(node->isNum || node->isVar) {
 
-            printf("isNum: %d\n", node->id);
+            // printf("isNum: %d\n", node->id);
            // printf("\tv%d = %s\n", node->id, node->token);
             sprintf(cfg->CFGInfo, "v%d = %s", node->id, node->token);
             sprintf(cfg->value, "%s", node->token);
@@ -311,6 +311,7 @@ int create(struct ast* node) {
         // } else {
         //     printf("define func %s\n", node->child->id->token);
         // }
+
         cfg->CFGInfo = "EXIT";
         connect(currentID, node->id);
 
