@@ -15,7 +15,7 @@
 
 struct ast;
 struct ast_child {struct ast* id; struct ast_child* next; }; //Dynamic data structure for the list of children
-struct ast {int id; char *token; bool is_leaf; int ntoken; char *fun; struct ast_child* child; struct ast* parent; struct ast* next;}; //Dynamic data structure for the AST. Each node points to a terminal/nonterminal and its children
+struct ast {int id; char *token; bool is_leaf; int ntoken; char *fun; struct ast_child* child; struct ast* parent; struct ast* next; int isNum;}; //Dynamic data structure for the AST. Each node points to a terminal/nonterminal and its children
 struct ast_list{struct ast** astList; int length; int capacity; struct ast* top; struct ast* bottom;};
 
 
@@ -26,6 +26,7 @@ bool contains_ast(struct ast_list* list, struct ast* root);
 void print_ast_list(const struct ast_list* list);
 struct ast_list* find_all_root();
 
+void isNum(int id);
 
 void insert_child(int val);       // Helper methods to specify child/children for the upcoming node
 void insert_children(int, ...);   // Variadic version (expects the # of children to be given in the first place)

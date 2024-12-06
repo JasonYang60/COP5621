@@ -31,8 +31,7 @@ int     {return INT;}
 bool          {return BOOL;}
 
 define\-fun     { return DEFINEFUN;}
-get\-int        {return GETINT;}
-get\-bool        {return GETBOOL;}
+
 print          { return PRINT;}
 
 [0-9]+     {yylval.ival = atoi(yytext); return CONST;}

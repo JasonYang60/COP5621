@@ -4,6 +4,8 @@ CFGNode* root[1024] = {NULL};
 int currentID = 0;
 
 int cnt = 0;
+int bound = 0;
+
 int cntAst(struct ast* node){
     if(node){
         cnt++;
@@ -42,6 +44,16 @@ int argCnt = 0;
 int create(struct ast* node) {
     root[node->id] = createNode(node->id);
     CFGNode* cfg = root[node->id];
+    if(node->id == 1){
+        if(strcmp(get_root(node)->token, "definefun") != 0) {
+            begin = true;
+            cnt++;
+            root[cnt] = createNode(cnt);
+            root[cnt]->CFGInfo = "main";
+            connect(currentID, cnt);
+            root[cnt]->value = "main";
+        }
+    }
     if(begin) {
 
         currentID = cnt;
@@ -50,9 +62,9 @@ int create(struct ast* node) {
         begin = false;
     }
 
-    if(strcmp(node->token, "GETBOOL") == 0
-        || strcmp(node->token, "GETINT") == 0
-        || strcmp(node->token, "call func") == 0
+    if(//strcmp(node->token, "GETBOOL") == 0
+        //|| strcmp(node->token, "GETINT") == 0
+         strcmp(node->token, "call func") == 0
     ) {
         cnt++;
         root[cnt] = createNode(cnt);
@@ -78,94 +90,8 @@ int create(struct ast* node) {
         cfg->traverse = root[cnt];
     }
     if(node->parent){
-        if(strcmp(node->parent->token, "definefun") == 0 && node == node->parent->child->id) {
-            // begin = true;
-            // printf("define func %s\n", node->token);
-            sprintf(cfg->CFGInfo, "%s", node->token);
-        } else if(strcmp(node->parent->token, "inputlist") == 0) {
-            if(strcmp(node->token, "none") == 0) {
-                return 0;
-            } else {
-                // printf("%d\n", node->id);
-                sprintf(cfg->CFGInfo, "%d", node->id);
-                argCnt++;
-                sprintf(cfg->value, "a%d", argCnt);
-                
-            }
-        } else if(strcmp(node->token, "inputlist") == 0
-                || strcmp(node->token, "ret INT") == 0
-                || strcmp(node->token, "ret BOOL") == 0
-        ) {
-            return 0;
-        } else if(strcmp(node->token, "call func") == 0) {
-            root[cnt]->traverse = cfg;
 
-            int min = (1 << 10);
-            struct ast_child* astp = node->child;
-            for(int i = 0; i < get_child_num(node); i++) {
-                if(astp->id->id < min){
-                    min = astp->id->id;
-                }
-                astp = astp->next;
-            }
-
-            sprintf(cfg->CFGInfo, "v%d := %s(", node->id, find_ast_node(min)->token);
-            sprintf(cfg->value, "%s(", find_ast_node(min)->token, find_ast_node(min)->token);
-
-            for(int i = 1; i < get_child_num(node); i++) {
-                
-                char str[64];
-                sprintf(str, "%s, ", find_ast_node(min + i)->token);
-                if(strcmp(str, "none, ") == 0){
-                    break;
-                }
-                strcat(cfg->CFGInfo, str);
-                strcat(cfg->value, str);
-
-            }
-            strcat(cfg->CFGInfo, ")");
-            strcat(cfg->value, ")");
-
-            // sprintf(cfg->value, "v%d", node->id);
-
-        } else if(strcmp(node->parent->token, "call func") == 0) {
-            int min = (1 << 10);
-            struct ast_child* astp = node->parent->child;
-            for(int i = 0; i < get_child_num(node->parent); i++) {
-                if(astp->id->id < min){
-                    min = astp->id->id;
-                }
-                astp = astp->next;
-            }
-            
-            // printf("id %d\n", node->id);
-            if(node->id == min){
-                return 0;
-            } 
-            else {
-                if(strcmp(node->token, "none") == 0) {
-                    root[min]->traverse = root[node->parent->id];
-                    return 0;
-                } else {
-                    begin = true;
-
-                    // sprintf(cfg->CFGInfo, "v%d = %s", node->id, node->token);
-                    // sprintf(cfg->value, "v%d", node->id);
-                    cnt++;
-                    root[cnt] = createNode(cnt);
-                    sprintf(root[cnt]->CFGInfo, "%d", cnt);
-                    sprintf(root[cnt]->value, "%s", node->token);
-
-                    connect(currentID, cnt);
-                    root[currentID]->traverse = root[cnt];
-
-                    root[cnt]->ori_id = node->id;
-                    currentID = cnt;
-                    return 0;
-                }
-            } 
-
-        } else if(strcmp(node->token, "if") == 0) {
+        if(strcmp(node->token, "if") == 0) {
             sprintf(cfg->CFGInfo, "IF v%d = true, then v%d := v%d, else v%d := v%d", 
                 node->child->id->id, 
                 node->id, node->child->next->id->id, 
@@ -239,13 +165,128 @@ int create(struct ast* node) {
         //     || strcmp(node->parent->token, "if") == 0 
         //     || strcmp(node->parent->token, "let") == 0 
         // ){
-        } else {
-           // printf("bb%d:\n", node->id);
+        // } else {
+        } else if(node->isNum) {
+
+            printf("isNum: %d\n", node->id);
            // printf("\tv%d = %s\n", node->id, node->token);
             sprintf(cfg->CFGInfo, "v%d = %s", node->id, node->token);
             sprintf(cfg->value, "%s", node->token);
             
         } 
+
+        if(strcmp(node->parent->token, "definefun") == 0 && node == node->parent->child->id) {
+            // begin = true;
+            // printf("define func %s\n", node->token);
+            sprintf(cfg->CFGInfo, "%s", node->token);
+        } else if(strcmp(node->parent->token, "inputlist") == 0) {
+            if(strcmp(node->token, "none") == 0) {
+                return 0;
+            } else {
+                // printf("%d\n", node->id);
+                sprintf(cfg->CFGInfo, "%d", node->id);
+                argCnt++;
+                sprintf(cfg->value, "a%d", argCnt);
+                
+            }
+        } else if(strcmp(node->token, "inputlist") == 0
+                || strcmp(node->token, "ret INT") == 0
+                || strcmp(node->token, "ret BOOL") == 0
+        ) {
+            return 0;
+        } else if(strcmp(node->token, "call func") == 0) {
+            root[cnt]->traverse = cfg;
+
+            int min = (1 << 10);
+            struct ast_child* astp = node->child;
+            for(int i = 0; i < get_child_num(node); i++) {
+                if(astp->id->id < min){
+                    min = astp->id->id;
+                }
+                astp = astp->next;
+            }
+
+            sprintf(cfg->CFGInfo, "v%d := %s(", node->id, find_ast_node(min)->token);
+            sprintf(cfg->value, "%s(", find_ast_node(min)->token, find_ast_node(min)->token);
+
+            for(int i = 1; i < get_child_num(node); i++) {
+                
+                char str[64];
+                int secMin = min;
+                min = (1 << 10);
+                astp = node->child;
+
+                bool find = false;
+                for(int i = 0; i < get_child_num(node); i++) {
+                    if(astp->id->id < min && astp->id->id > secMin){
+                        min = astp->id->id;
+                    }
+                    astp = astp->next;
+                }
+
+                for(int bd = bound + 1; bd <= cnt; bd++){
+                    if(root[bd]->ori_id == min){
+                        sprintf(str, "v%d, ", bd);
+                        find = true;
+                        break;
+                    }
+                }
+                // if(strcmp(str, "none, ") == 0){
+                //     break;
+                // }
+                if(!find) {
+                    break;
+                }
+                strcat(cfg->CFGInfo, str);
+                strcat(cfg->value, str);
+                
+
+
+            }
+            strcat(cfg->CFGInfo, ")");
+            strcat(cfg->value, ")");
+
+            sprintf(root[cnt]->value, "%s", cfg->value);
+
+        } else if(strcmp(node->parent->token, "call func") == 0) {
+            int min = (1 << 10);
+            struct ast_child* astp = node->parent->child;
+            for(int i = 0; i < get_child_num(node->parent); i++) {
+                if(astp->id->id < min){
+                    min = astp->id->id;
+                }
+                astp = astp->next;
+            }
+            
+            // printf("id %d\n", node->id);
+            if(node->id == min){
+                return 0;
+            } 
+            else {
+                if(strcmp(node->token, "none") == 0) {
+                    root[min]->traverse = root[node->parent->id];
+                    return 0;
+                } else {
+                    begin = true;
+
+                    // sprintf(cfg->CFGInfo, "v%d = %s", node->id, node->token);
+                    // sprintf(cfg->value, "v%d", node->id);
+                    cnt++;
+                    root[cnt] = createNode(cnt);
+                    sprintf(root[cnt]->CFGInfo, "%d", cnt);
+                    sprintf(root[cnt]->value, "%s", node->token);
+
+                    connect(currentID, cnt);
+                    root[currentID]->traverse = root[cnt];
+
+                    root[cnt]->ori_id = node->id;
+                    root[cnt]->value = cfg->value;
+                    currentID = cnt;
+                }
+            } 
+        } 
+
+        
 
         printf(" ");
         
@@ -298,7 +339,6 @@ void setTraverse(CFGNode* node) {
     }
 }
 
-int bound = 0;
 
 int llrr(CFGNode* node) {
     // printf("(bb%d:, name:%s\n", node->id, node->CFGInfo);
@@ -306,25 +346,27 @@ int llrr(CFGNode* node) {
         if(strcmp(node->CFGInfo, "main") == 0){
             printf("function main\n");
         } else {
-            if(strcmp(node->traverse->value, "GETBOOL") == 0
-                || strcmp(node->traverse->value, "GETINT") == 0
-            ) {
-                printf("bb%d:\n", node->id);
-                printf("\tcall %s\n", node->traverse->value);
-                // printf("\trv = v%d\n", node->traverse->id);
-                printf("\tbr bb%d\n", node->traverse->id);
+            // if(strcmp(node->traverse->value, "GETBOOL") == 0
+            //     || strcmp(node->traverse->value, "GETINT") == 0
+            // ) {
+            //     printf("bb%d:\n", node->id);
+            //     printf("\tcall %s\n", node->traverse->value);
+            //     // printf("\trv = v%d\n", node->traverse->id);
+            //     printf("\tbr bb%d\n", node->traverse->id);
 
 
-            } else if(node->ori_id == -2) {
+            // } else
+            if(node->ori_id == -2) {
                 printf("bb%d:\n", node->id);
-                printf("\tcall %s\n", node->traverse->value);
+                printf("\tcall %s\n", node->value);
                 printf("\tbr bb%d\n", node->traverse->id);
             } else if( node->ori_id > 0
                      && find_ast_node(node->ori_id)->parent
                      && strcmp(find_ast_node(node->ori_id)->parent->token, "call func") == 0
             ) {
                 printf("bb%d:\n", node->id);
-                printf("\ta%d = %s\n", ++argCnt, node->value);
+                // printf("\ta%d = %s\n", ++argCnt, node->value);
+                printf("\tv%d = %s\n", node->id, node->value);
                 printf("\tbr bb%d\n", node->traverse->id);
             }
         }
@@ -345,9 +387,9 @@ int llrr(CFGNode* node) {
     ) {
         
 
-    } else if(strcmp(find_ast_node(node->id)->token, "GETBOOL") == 0
-            || strcmp(find_ast_node(node->id)->token, "GETINT") == 0
-            || strcmp(find_ast_node(node->id)->token, "call func") == 0
+    } else if(//strcmp(find_ast_node(node->id)->token, "GETBOOL") == 0
+            //|| strcmp(find_ast_node(node->id)->token, "GETINT") == 0
+        strcmp(find_ast_node(node->id)->token, "call func") == 0
     ) {
         printf("\tv%d = rv\n", node->id);
     } else if(strcmp(find_ast_node(node->id)->token, "if") == 0) {
@@ -389,9 +431,16 @@ int testGraph() {
     printf("\n");
 
     // dfs(root[1], printCFG);
-    setTraverse(root[1]);
+    int root_idx = 1;
+    if(strcmp(get_root(find_ast_node(1))->token, "definefun") != 0){
+        root_idx = root[1]->pred1->id;
+    }
+
+    setTraverse(root[root_idx]);
     printf("function GETINT\nfunction GETBOOL\n");
-    dfs(root[1], llrr);
+    dfs(root[root_idx], llrr);
+    dfs(root[root_idx], printCFG);
+
 
     FILE* fp = fopen("cfg.dot", "w");
     fprintf(fp, "digraph print {\n ");
@@ -399,7 +448,8 @@ int testGraph() {
     // for (int i = 0; i < alist->length; i++){
     //     create_CFG(alist->astList[i],root_id,dot_id);
     // }
-    dot_CFG(root[1], fp);
+    dot_CFG(root[root_idx], fp);
+
 
     // printCFGList(fp);
 

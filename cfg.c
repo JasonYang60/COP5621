@@ -47,6 +47,9 @@ int printCFG(CFGNode* node){
 
     char* name5 = node->traverse ? node->traverse->CFGInfo : "null";
     printf("\ttraverse: %s\n", name5);
+    printf("\tori_id: %d, value: %s\n", node->ori_id, node->value ? node->value : "null");
+
+    
     return 0;
 }
 

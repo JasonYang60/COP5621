@@ -21,8 +21,8 @@
 %token <sval>FALSE
 %token INT BOOL
 
-%token <sval>GETINT 
-%token <sval>GETBOOL
+//%token <sval>GETINT 
+//%token <sval>GETBOOL
 %token ADD MINUS MUL DIV MOD
 %token SMALLER GREATER NOTGREATER NOTSMALLER EQUAL
 %token AND OR NOT
@@ -76,14 +76,14 @@ exprType: INT {}
         | BOOL  {}
 retexprType: INT  {$$ = insert_node("ret INT", 3); }
         | BOOL {$$ = insert_node("ret BOOL", 4);}
-expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node(str,1); }
+expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node(str,1); isNum($$);}
         | varint { $$ = $1;}
-        | LEFT GETINT RIGHT{
-                $$ = insert_node("GETINT", 6);
-                }
-        | TRUE{$$ = insert_node("true", 7); }
-        | FALSE{$$ = insert_node("false", 8); }
-        | LEFT GETBOOL RIGHT{ $$ = insert_node("GETBOOL", 9); }
+        //| LEFT GETINT RIGHT{
+        //        $$ = insert_node("GETINT", 6);
+        //        }
+        | TRUE{$$ = insert_node("true", 7); isNum($$);}
+        | FALSE{$$ = insert_node("false", 8); isNum($$);}
+        //| LEFT GETBOOL RIGHT{ $$ = insert_node("GETBOOL", 9); }
         | addTerm{$$ = $1;}
         | multiplyTerm{$$ = $1; }
         | minusTerm{$$ = $1; }

@@ -90,6 +90,10 @@ void insert_parent(struct ast* p) {
   }
 }
 
+void isNum(int id){
+  find_ast_node(id)->isNum = 1;
+}
+
 void fill_ast_node(struct ast** t, int val, char* token, bool is_leaf, int ntoken){
   (*t) = (struct ast*)malloc(sizeof(struct ast));
   (*t)->id = val;                                     //set value into id field
@@ -97,6 +101,7 @@ void fill_ast_node(struct ast** t, int val, char* token, bool is_leaf, int ntoke
   (*t)->token = token;
   (*t)->is_leaf = is_leaf;
   (*t)->ntoken = ntoken;
+  (*t)->isNum = 0;
   if (ast_child_root != NULL){                          //if child doesnot exist,
     (*t)->child = ast_child_root;                     //set current child root pointer to child field
     ast_child_root = NULL;                              //Set the child root to NULL as we intend to set a new list
