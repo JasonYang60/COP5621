@@ -1,5 +1,5 @@
 
-#line 2 "lex.yy.c"
+#line 3 "lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -525,8 +525,8 @@ char *yytext;
 #include <stdio.h>
 #include <errno.h>
 #include "y.tab.h"
-#line 528 "lex.yy.c"
 #line 529 "lex.yy.c"
+#line 530 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -746,7 +746,7 @@ YY_DECL
 #line 7 "scanner.l"
 
 
-#line 749 "lex.yy.c"
+#line 750 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -916,60 +916,60 @@ YY_RULE_SETUP
 case 23:
 YY_RULE_SETUP
 #line 34 "scanner.l"
-{return GETINT;}
+{yylval.sval = "GETINT";return VARNAME;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 #line 35 "scanner.l"
-{return GETBOOL;}
+{yylval.sval = "GETBOOL";return VARNAME;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 36 "scanner.l"
+#line 37 "scanner.l"
 { return PRINT;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 38 "scanner.l"
+#line 39 "scanner.l"
 {yylval.ival = atoi(yytext); return CONST;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 39 "scanner.l"
+#line 40 "scanner.l"
 {yylval.sval = yytext;return VARNAME;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 41 "scanner.l"
+#line 42 "scanner.l"
 {printf("Error: invalid variable name: '%s'\n", yytext); perror("Lexical Error."); exit(-1);}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 43 "scanner.l"
+#line 44 "scanner.l"
 {printf("Error: invalid variable name: '%s'\n", yytext); perror("Lexical Error."); exit(-1);}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 44 "scanner.l"
+#line 45 "scanner.l"
 {printf("Error: invalid variable name: '%s'\n", yytext); perror("Lexical Error."); exit(-1);}
 	YY_BREAK
 case 31:
 /* rule 31 can match eol */
 YY_RULE_SETUP
-#line 46 "scanner.l"
+#line 47 "scanner.l"
 { /* ignored */ }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 47 "scanner.l"
+#line 48 "scanner.l"
 { printf("Error: Unexpected character: '%s'\n", yytext); perror("Lexical Error."); exit(-1);}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 48 "scanner.l"
+#line 49 "scanner.l"
 ECHO;
 	YY_BREAK
-#line 972 "lex.yy.c"
+#line 973 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1974,7 +1974,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 48 "scanner.l"
+#line 49 "scanner.l"
 
 
 //int main(void) {

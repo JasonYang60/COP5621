@@ -31,8 +31,8 @@ int     {return INT;}
 bool          {return BOOL;}
 
 define\-fun     { return DEFINEFUN;}
-get\-int        {yylval.sval = yytext;return VARNAME;}
-get\-bool        {yylval.sval = yytext;return VARNAME;}
+get\-int        {yylval.sval = "GETINT";return VARNAME;}
+get\-bool        {yylval.sval = "GETBOOL";return VARNAME;}
 
 print          { return PRINT;}
 

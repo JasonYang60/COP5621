@@ -1,0 +1,115 @@
+digraph print {
+ 1 [label="const", fontname="monospace"];
+ 1->6
+6 [label="v6 = false", fontname="monospace"];
+ 6->7
+6->8
+7 [label="v7 = 0", fontname="monospace"];
+ 7->9
+9 [label="IF v6 = true, then v9 := v7, else v9 := v8", fontname="monospace"];
+ 9->5
+5 [label="c = v9", fontname="monospace"];
+ 5->10
+10 [label="v10 = c", fontname="monospace"];
+ 10->11
+11 [label="v11 := v10", fontname="monospace"];
+ 11->61
+61 [label="61", fontname="monospace"];
+ 61->14
+14 [label="v14 := GETBOOL()", fontname="monospace"];
+ 14->15
+14->16
+15 [label="v15 = 1", fontname="monospace"];
+ 15->17
+17 [label="IF v14 = true, then v17 := v15, else v17 := v16", fontname="monospace"];
+ 17->18
+18 [label="v18 := v11 equal v17", fontname="monospace"];
+ 18->19
+19 [label="EXIT", fontname="monospace"];
+ 20 [label="test", fontname="monospace"];
+ 20->21
+21 [label="21", fontname="monospace"];
+ 21->22
+22 [label="22", fontname="monospace"];
+ 22->25
+25 [label="v25 = a", fontname="monospace"];
+ 25->26
+26 [label="v26 = b", fontname="monospace"];
+ 26->27
+27 [label="v27 = b", fontname="monospace"];
+ 27->28
+28 [label="v28 := v26 minus v27", fontname="monospace"];
+ 28->29
+29 [label="v29 := v25 mul v28", fontname="monospace"];
+ 29->30
+30 [label="v30 = b", fontname="monospace"];
+ 30->31
+31 [label="v31 = 0", fontname="monospace"];
+ 31->32
+32 [label="v32 = a", fontname="monospace"];
+ 32->33
+33 [label="v33 := v31 div v32", fontname="monospace"];
+ 33->34
+34 [label="v34 := v30 mul v33", fontname="monospace"];
+ 34->35
+35 [label="v35 := v29 equal v34", fontname="monospace"];
+ 35->36
+35->62
+36 [label="v36 = 1", fontname="monospace"];
+ 36->37
+37 [label="v37 = a", fontname="monospace"];
+ 37->38
+38 [label="v38 = b", fontname="monospace"];
+ 38->39
+39 [label="v39 := v37 add v38", fontname="monospace"];
+ 39->40
+40 [label="v40 := v36 greater v39", fontname="monospace"];
+ 40->44
+44 [label="IF v35 = true, then v44 := v40, else v44 := v43", fontname="monospace"];
+ 44->45
+45 [label="EXIT", fontname="monospace"];
+ 63 [label="main", fontname="monospace"];
+ 63->64
+64 [label="64", fontname="monospace"];
+ 64->47
+47 [label="v47 = 1", fontname="monospace"];
+ 47->65
+65 [label="65", fontname="monospace"];
+ 65->48
+48 [label="v48 = 2", fontname="monospace"];
+ 48->66
+66 [label="66", fontname="monospace"];
+ 66->49
+49 [label="v49 := test(v64, v65, )", fontname="monospace"];
+ 49->67
+49->58
+67 [label="67", fontname="monospace"];
+ 67->52
+52 [label="v52 := GETBOOL()", fontname="monospace"];
+ 52->53
+52->54
+53 [label="v53 = 13", fontname="monospace"];
+ 53->57
+57 [label="IF v52 = true, then v57 := v53, else v57 := v56", fontname="monospace"];
+ 57->59
+59 [label="IF v49 = true, then v59 := v57, else v59 := v58", fontname="monospace"];
+ 59->60
+60 [label="EXIT", fontname="monospace"];
+ 54 [label="v54 = 343", fontname="monospace"];
+ 54->55
+55 [label="v55 = 15", fontname="monospace"];
+ 55->56
+56 [label="v56 := v54 mod v55", fontname="monospace"];
+ 56->57
+58 [label="v58 = 5", fontname="monospace"];
+ 58->59
+62 [label="62", fontname="monospace"];
+ 62->43
+43 [label="v43 := const()", fontname="monospace"];
+ 43->44
+16 [label="v16 = 1", fontname="monospace"];
+ 16->17
+8 [label="v8 = 1", fontname="monospace"];
+ 8->9
+}
+ 

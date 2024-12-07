@@ -168,7 +168,7 @@ int create(struct ast* node) {
         // } else {
         } else if(node->isNum || node->isVar) {
 
-            // printf("isNum: %d\n", node->id);
+            // printf("isNum: %d\n\n\n\n", node->id);
            // printf("\tv%d = %s\n", node->id, node->token);
             sprintf(cfg->CFGInfo, "v%d = %s", node->id, node->token);
             sprintf(cfg->value, "%s", node->token);
@@ -179,6 +179,8 @@ int create(struct ast* node) {
             // begin = true;
             // printf("define func %s\n", node->token);
             sprintf(cfg->CFGInfo, "%s", node->token);
+            sprintf(cfg->value, "%s", node->token);
+
         } else if(strcmp(node->parent->token, "inputlist") == 0) {
             if(strcmp(node->token, "none") == 0) {
                 return 0;
@@ -440,7 +442,7 @@ int testGraph() {
     setTraverse(root[root_idx]);
     printf("function GETINT\nfunction GETBOOL\n");
     dfs(root[root_idx], llrr);
-    // dfs(root[root_idx], printCFG);
+    dfs(root[root_idx], printCFG);
 
 
     FILE* fp = fopen("cfg.dot", "w");

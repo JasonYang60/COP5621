@@ -1,20 +1,120 @@
 digraph print {
- 1 [label="print", fontname="monospace"];
- 2 [label="x", fontname="monospace"];
- 3 [label="1", fontname="monospace"];
- 4 [label="x", fontname="monospace"];
- 5 [label="1", fontname="monospace"];
- 6 [label="1", fontname="monospace"];
- 7 [label="let", fontname="monospace", style=filled, fillcolor=mintcream];
- 7->4
- 7->5
- 7->6
- 8 [label="let", fontname="monospace", style=filled, fillcolor=mintcream];
- 8->2
- 8->3
- 8->7
- 9 [label="entry", fontname="monospace", style=filled, fillcolor=mintcream];
- 9->1
+ 1 [label="const", fontname="monospace"];
+ 2 [label="none", fontname="monospace"];
+ 3 [label="inputlist", fontname="monospace", style=filled, fillcolor=mintcream];
+ 3->2
+ 4 [label="ret BOOL", fontname="monospace"];
+ 5 [label="c", fontname="monospace"];
+ 6 [label="false", fontname="monospace"];
+ 7 [label="0", fontname="monospace"];
+ 8 [label="1", fontname="monospace"];
+ 9 [label="if", fontname="monospace", style=filled, fillcolor=mintcream];
+ 9->6
+ 9->7
  9->8
+ 10 [label="c", fontname="monospace"];
+ 11 [label="let", fontname="monospace", style=filled, fillcolor=mintcream];
+ 11->5
+ 11->9
+ 11->10
+ 12 [label="GETBOOL", fontname="monospace"];
+ 13 [label="none", fontname="monospace"];
+ 14 [label="call func", fontname="monospace", style=filled, fillcolor=mintcream];
+ 14->12
+ 14->13
+ 15 [label="1", fontname="monospace"];
+ 16 [label="1", fontname="monospace"];
+ 17 [label="if", fontname="monospace", style=filled, fillcolor=mintcream];
+ 17->14
+ 17->15
+ 17->16
+ 18 [label="equal", fontname="monospace", style=filled, fillcolor=mintcream];
+ 18->11
+ 18->17
+ 19 [label="definefun", fontname="monospace", style=filled, fillcolor=mintcream];
+ 19->1
+ 19->3
+ 19->4
+ 19->18
+ 20 [label="test", fontname="monospace"];
+ 21 [label="a", fontname="monospace"];
+ 22 [label="b", fontname="monospace"];
+ 23 [label="inputlist", fontname="monospace", style=filled, fillcolor=mintcream];
+ 23->22
+ 23->21
+ 24 [label="ret BOOL", fontname="monospace"];
+ 25 [label="a", fontname="monospace"];
+ 26 [label="b", fontname="monospace"];
+ 27 [label="b", fontname="monospace"];
+ 28 [label="minus", fontname="monospace", style=filled, fillcolor=mintcream];
+ 28->26
+ 28->27
+ 29 [label="mul", fontname="monospace", style=filled, fillcolor=mintcream];
+ 29->25
+ 29->28
+ 30 [label="b", fontname="monospace"];
+ 31 [label="0", fontname="monospace"];
+ 32 [label="a", fontname="monospace"];
+ 33 [label="div", fontname="monospace", style=filled, fillcolor=mintcream];
+ 33->31
+ 33->32
+ 34 [label="mul", fontname="monospace", style=filled, fillcolor=mintcream];
+ 34->30
+ 34->33
+ 35 [label="equal", fontname="monospace", style=filled, fillcolor=mintcream];
+ 35->29
+ 35->34
+ 36 [label="1", fontname="monospace"];
+ 37 [label="a", fontname="monospace"];
+ 38 [label="b", fontname="monospace"];
+ 39 [label="add", fontname="monospace", style=filled, fillcolor=mintcream];
+ 39->37
+ 39->38
+ 40 [label="greater", fontname="monospace", style=filled, fillcolor=mintcream];
+ 40->36
+ 40->39
+ 41 [label="const", fontname="monospace"];
+ 42 [label="none", fontname="monospace"];
+ 43 [label="call func", fontname="monospace", style=filled, fillcolor=mintcream];
+ 43->41
+ 43->42
+ 44 [label="if", fontname="monospace", style=filled, fillcolor=mintcream];
+ 44->35
+ 44->40
+ 44->43
+ 45 [label="definefun", fontname="monospace", style=filled, fillcolor=mintcream];
+ 45->20
+ 45->23
+ 45->24
+ 45->44
+ 46 [label="test", fontname="monospace"];
+ 47 [label="1", fontname="monospace"];
+ 48 [label="2", fontname="monospace"];
+ 49 [label="call func", fontname="monospace", style=filled, fillcolor=mintcream];
+ 49->48
+ 49->46
+ 49->47
+ 50 [label="GETBOOL", fontname="monospace"];
+ 51 [label="none", fontname="monospace"];
+ 52 [label="call func", fontname="monospace", style=filled, fillcolor=mintcream];
+ 52->50
+ 52->51
+ 53 [label="13", fontname="monospace"];
+ 54 [label="343", fontname="monospace"];
+ 55 [label="15", fontname="monospace"];
+ 56 [label="mod", fontname="monospace", style=filled, fillcolor=mintcream];
+ 56->54
+ 56->55
+ 57 [label="if", fontname="monospace", style=filled, fillcolor=mintcream];
+ 57->52
+ 57->53
+ 57->56
+ 58 [label="5", fontname="monospace"];
+ 59 [label="if", fontname="monospace", style=filled, fillcolor=mintcream];
+ 59->49
+ 59->57
+ 59->58
+ 60 [label="main", fontname="monospace", style=filled, fillcolor=mintcream];
+ 60->59
  }
  

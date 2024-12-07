@@ -76,7 +76,7 @@ exprType: INT {}
         | BOOL  {}
 retexprType: INT  {$$ = insert_node("ret INT", 3); }
         | BOOL {$$ = insert_node("ret BOOL", 4);}
-expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node(str,1); isNum($$);}
+expr    : CONST {char* str = (char*)malloc(12 * sizeof(char)); sprintf(str, "%d", $1); $$ = insert_node(str,1); isNum($$); }
         | varint { $$ = $1;}
         //| LEFT GETINT RIGHT{
         //        $$ = insert_node("GETINT", 6);
